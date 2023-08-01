@@ -11,25 +11,27 @@ using System.Xml.Linq;
 
 namespace MyFtp3
 {
-	public struct FtpFileInfo
+	// 文件或子目录的详细信息结构体
+	public struct DirItemInfo
 	{
 		public string Name = string.Empty;
 		public bool IsDirectory = false;
 		public DateTime LastModified = DateTime.MinValue;
-		public long Size = 0;
+		public long Size = 0; // 以字节为单位
 
-		public FtpFileInfo() { }
+		public DirItemInfo() { }
 	}
 
+	// FTP 服务
 	public class FtpService
 	{
 		FtpWebRequest? request = null;
 
-		public string host = "";
-		public string user = "";
-		public string pass = "";
+		public string host = ""; // 服务器IP地址
+		public string user = ""; // 登录用户名，为空则匿名
+		public string pass = ""; // 登录密码
 
-		public string workDir = "/";
+		public string workDir = "/"; // 当前工作路径
 
 		public FtpService() { }
 
@@ -70,7 +72,8 @@ namespace MyFtp3
 			return status;
 		}
 
-		public FtpFileInfo[] ListWorkDir()
+		// 列出工作路径中所有项的详细信息
+		public DirItemInfo[] ListWorkDir()
 		{
 			request = (FtpWebRequest)WebRequest.Create($"ftp://{host}{workDir}");
 
@@ -80,6 +83,7 @@ namespace MyFtp3
 			}
 			request.Method = WebRequestMethods.Ftp.ListDirectory;
 
+			// 获取子项列表字符串
 			string listStr;
 
 			using (FtpWebResponse response = (FtpWebResponse)request.GetResponse())
@@ -88,15 +92,17 @@ namespace MyFtp3
 				listStr = reader.ReadToEnd();
 			}
 
-			string[] list = listStr.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-			FtpFileInfo[] infos = new FtpFileInfo[list.Length];
+			// 将字符串按行存入数组，并去掉空项和每项两端的'\r'等无效字符
+			string[] list = listStr.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+			DirItemInfo[] infos = new DirItemInfo[list.Length];
 			for (int i = 0; i < list.Length; ++i)
 			{
-				list[i] = list[i].Trim();
-
 				bool isDirectory = false;
 				DateTime lastModified = DateTime.MinValue;
 				long size = 0;
+
+				// 获取修改日期和文件大小，如果抛出异常说明不是文件而是目录
 				try
 				{
 					lastModified = GetFileLastModified(workDir + list[i]);
@@ -106,6 +112,7 @@ namespace MyFtp3
 				{
 					isDirectory = true;
 				}
+
 				infos[i] = new()
 				{
 					Name = list[i],
@@ -148,6 +155,7 @@ namespace MyFtp3
 			}
 			request.Method = WebRequestMethods.Ftp.GetFileSize;
 
+			// 获取文件大小字符串
 			string fileSizeStr;
 
 			using (FtpWebResponse response = (FtpWebResponse)request.GetResponse())
@@ -155,6 +163,7 @@ namespace MyFtp3
 				fileSizeStr = response.StatusDescription[4..];
 			}
 
+			// 将字符串转为整数返回
 			return long.Parse(fileSizeStr);
 		}
 	}

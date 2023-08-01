@@ -28,6 +28,7 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
+			this.components = new System.ComponentModel.Container();
 			this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
 			this.txtStatus = new System.Windows.Forms.RichTextBox();
 			this.tableLayoutPanel7 = new System.Windows.Forms.TableLayoutPanel();
@@ -57,12 +58,14 @@
 			this.listView1 = new System.Windows.Forms.ListView();
 			this.label3 = new System.Windows.Forms.Label();
 			this.panel1 = new System.Windows.Forms.Panel();
-			this.button4 = new System.Windows.Forms.Button();
-			this.button3 = new System.Windows.Forms.Button();
 			this.button2 = new System.Windows.Forms.Button();
 			this.button1 = new System.Windows.Forms.Button();
-			this.textBox1 = new System.Windows.Forms.TextBox();
+			this.txtLocalPath = new System.Windows.Forms.TextBox();
 			this.label2 = new System.Windows.Forms.Label();
+			this.cmsDirList = new System.Windows.Forms.ContextMenuStrip(this.components);
+			this.tsiDirList_Download = new System.Windows.Forms.ToolStripMenuItem();
+			this.tsiDirList_Rename = new System.Windows.Forms.ToolStripMenuItem();
+			this.tsiDirList_Delete = new System.Windows.Forms.ToolStripMenuItem();
 			this.tableLayoutPanel1.SuspendLayout();
 			this.tableLayoutPanel7.SuspendLayout();
 			this.tableLayoutPanel9.SuspendLayout();
@@ -74,6 +77,7 @@
 			this.panel2.SuspendLayout();
 			this.panel3.SuspendLayout();
 			this.panel1.SuspendLayout();
+			this.cmsDirList.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// tableLayoutPanel1
@@ -122,13 +126,13 @@
 			this.tableLayoutPanel7.Name = "tableLayoutPanel7";
 			this.tableLayoutPanel7.RowCount = 1;
 			this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-			this.tableLayoutPanel7.Size = new System.Drawing.Size(665, 34);
+			this.tableLayoutPanel7.Size = new System.Drawing.Size(642, 34);
 			this.tableLayoutPanel7.TabIndex = 0;
 			// 
 			// btnConnect
 			// 
 			this.btnConnect.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.btnConnect.Location = new System.Drawing.Point(568, 3);
+			this.btnConnect.Location = new System.Drawing.Point(545, 3);
 			this.btnConnect.Name = "btnConnect";
 			this.btnConnect.Size = new System.Drawing.Size(94, 28);
 			this.btnConnect.TabIndex = 3;
@@ -145,7 +149,7 @@
 			this.tableLayoutPanel9.Controls.Add(this.label5, 0, 0);
 			this.tableLayoutPanel9.Controls.Add(this.txtPass, 1, 0);
 			this.tableLayoutPanel9.Dock = System.Windows.Forms.DockStyle.Left;
-			this.tableLayoutPanel9.Location = new System.Drawing.Point(412, 3);
+			this.tableLayoutPanel9.Location = new System.Drawing.Point(389, 3);
 			this.tableLayoutPanel9.Name = "tableLayoutPanel9";
 			this.tableLayoutPanel9.RowCount = 1;
 			this.tableLayoutPanel9.RowStyles.Add(new System.Windows.Forms.RowStyle());
@@ -185,7 +189,7 @@
 			this.tableLayoutPanel8.Name = "tableLayoutPanel8";
 			this.tableLayoutPanel8.RowCount = 1;
 			this.tableLayoutPanel8.RowStyles.Add(new System.Windows.Forms.RowStyle());
-			this.tableLayoutPanel8.Size = new System.Drawing.Size(235, 28);
+			this.tableLayoutPanel8.Size = new System.Drawing.Size(212, 28);
 			this.tableLayoutPanel8.TabIndex = 0;
 			// 
 			// label4
@@ -194,19 +198,19 @@
 			this.label4.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.label4.Location = new System.Drawing.Point(3, 0);
 			this.label4.Name = "label4";
-			this.label4.Size = new System.Drawing.Size(79, 29);
+			this.label4.Size = new System.Drawing.Size(56, 29);
 			this.label4.TabIndex = 0;
-			this.label4.Text = "主机IP地址：";
+			this.label4.Text = "服务器：";
 			this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
 			// 
 			// txtHost
 			// 
 			this.txtHost.Anchor = System.Windows.Forms.AnchorStyles.Left;
-			this.txtHost.Location = new System.Drawing.Point(88, 3);
+			this.txtHost.Location = new System.Drawing.Point(65, 3);
 			this.txtHost.Name = "txtHost";
 			this.txtHost.Size = new System.Drawing.Size(144, 23);
 			this.txtHost.TabIndex = 0;
-			this.txtHost.Text = "127.1";
+			this.txtHost.Text = "localhost";
 			// 
 			// tableLayoutPanel4
 			// 
@@ -217,7 +221,7 @@
 			this.tableLayoutPanel4.Controls.Add(this.label1, 0, 0);
 			this.tableLayoutPanel4.Controls.Add(this.txtUser, 1, 0);
 			this.tableLayoutPanel4.Dock = System.Windows.Forms.DockStyle.Left;
-			this.tableLayoutPanel4.Location = new System.Drawing.Point(244, 3);
+			this.tableLayoutPanel4.Location = new System.Drawing.Point(221, 3);
 			this.tableLayoutPanel4.Name = "tableLayoutPanel4";
 			this.tableLayoutPanel4.RowCount = 1;
 			this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle());
@@ -310,11 +314,10 @@
 			this.txtWorkDir.AcceptsReturn = true;
 			this.txtWorkDir.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.txtWorkDir.Location = new System.Drawing.Point(93, 3);
-			this.txtWorkDir.Multiline = true;
 			this.txtWorkDir.Name = "txtWorkDir";
 			this.txtWorkDir.Size = new System.Drawing.Size(381, 23);
 			this.txtWorkDir.TabIndex = 1;
-			this.txtWorkDir.TextChanged += new System.EventHandler(this.txtWorkDir_TextChanged);
+			this.txtWorkDir.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtWorkDir_KeyDown);
 			this.txtWorkDir.Leave += new System.EventHandler(this.txtWorkDir_Leave);
 			// 
 			// label7
@@ -355,6 +358,7 @@
 			this.lstWorkDir.TabIndex = 1;
 			this.lstWorkDir.UseCompatibleStateImageBehavior = false;
 			this.lstWorkDir.View = System.Windows.Forms.View.Details;
+			this.lstWorkDir.MouseClick += new System.Windows.Forms.MouseEventHandler(this.lstWorkDir_MouseClick);
 			this.lstWorkDir.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.lstWorkDir_MouseDoubleClick);
 			// 
 			// columnHeader1
@@ -388,9 +392,9 @@
 			this.panel3.Controls.Add(this.listView1);
 			this.panel3.Controls.Add(this.label3);
 			this.panel3.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.panel3.Location = new System.Drawing.Point(0, 191);
+			this.panel3.Location = new System.Drawing.Point(0, 89);
 			this.panel3.Name = "panel3";
-			this.panel3.Size = new System.Drawing.Size(291, 238);
+			this.panel3.Size = new System.Drawing.Size(291, 340);
 			this.panel3.TabIndex = 0;
 			// 
 			// listView1
@@ -398,7 +402,7 @@
 			this.listView1.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.listView1.Location = new System.Drawing.Point(0, 23);
 			this.listView1.Name = "listView1";
-			this.listView1.Size = new System.Drawing.Size(291, 215);
+			this.listView1.Size = new System.Drawing.Size(291, 317);
 			this.listView1.TabIndex = 2;
 			this.listView1.UseCompatibleStateImageBehavior = false;
 			// 
@@ -414,35 +418,15 @@
 			// 
 			// panel1
 			// 
-			this.panel1.Controls.Add(this.button4);
-			this.panel1.Controls.Add(this.button3);
 			this.panel1.Controls.Add(this.button2);
 			this.panel1.Controls.Add(this.button1);
-			this.panel1.Controls.Add(this.textBox1);
+			this.panel1.Controls.Add(this.txtLocalPath);
 			this.panel1.Controls.Add(this.label2);
 			this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
 			this.panel1.Location = new System.Drawing.Point(0, 0);
 			this.panel1.Name = "panel1";
-			this.panel1.Size = new System.Drawing.Size(291, 191);
+			this.panel1.Size = new System.Drawing.Size(291, 89);
 			this.panel1.TabIndex = 1;
-			// 
-			// button4
-			// 
-			this.button4.Location = new System.Drawing.Point(148, 38);
-			this.button4.Name = "button4";
-			this.button4.Size = new System.Drawing.Size(140, 29);
-			this.button4.TabIndex = 11;
-			this.button4.Text = "删除选中项";
-			this.button4.UseVisualStyleBackColor = true;
-			// 
-			// button3
-			// 
-			this.button3.Location = new System.Drawing.Point(3, 38);
-			this.button3.Name = "button3";
-			this.button3.Size = new System.Drawing.Size(140, 29);
-			this.button3.TabIndex = 10;
-			this.button3.Text = "新建目录";
-			this.button3.UseVisualStyleBackColor = true;
 			// 
 			// button2
 			// 
@@ -450,7 +434,7 @@
 			this.button2.Name = "button2";
 			this.button2.Size = new System.Drawing.Size(140, 29);
 			this.button2.TabIndex = 1;
-			this.button2.Text = "下载选中项";
+			this.button2.Text = "新建目录";
 			this.button2.UseVisualStyleBackColor = true;
 			// 
 			// button1
@@ -459,24 +443,56 @@
 			this.button1.Name = "button1";
 			this.button1.Size = new System.Drawing.Size(140, 29);
 			this.button1.TabIndex = 0;
-			this.button1.Text = "上传...";
+			this.button1.Text = "上传文件";
 			this.button1.UseVisualStyleBackColor = true;
 			// 
-			// textBox1
+			// txtLocalPath
 			// 
-			this.textBox1.Location = new System.Drawing.Point(0, 162);
-			this.textBox1.Name = "textBox1";
-			this.textBox1.Size = new System.Drawing.Size(291, 23);
-			this.textBox1.TabIndex = 2;
+			this.txtLocalPath.AcceptsReturn = true;
+			this.txtLocalPath.Location = new System.Drawing.Point(0, 60);
+			this.txtLocalPath.Name = "txtLocalPath";
+			this.txtLocalPath.PlaceholderText = "未设置";
+			this.txtLocalPath.Size = new System.Drawing.Size(291, 23);
+			this.txtLocalPath.TabIndex = 2;
+			this.txtLocalPath.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtLocalPath_KeyDown);
+			this.txtLocalPath.Leave += new System.EventHandler(this.txtLocalPath_Leave);
 			// 
 			// label2
 			// 
 			this.label2.AutoSize = true;
-			this.label2.Location = new System.Drawing.Point(0, 142);
+			this.label2.Location = new System.Drawing.Point(0, 40);
 			this.label2.Name = "label2";
 			this.label2.Size = new System.Drawing.Size(80, 17);
 			this.label2.TabIndex = 9;
 			this.label2.Text = "本地默认路径";
+			// 
+			// cmsDirList
+			// 
+			this.cmsDirList.DropShadowEnabled = false;
+			this.cmsDirList.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.tsiDirList_Download,
+            this.tsiDirList_Rename,
+            this.tsiDirList_Delete});
+			this.cmsDirList.Name = "DirItemDropDown";
+			this.cmsDirList.Size = new System.Drawing.Size(113, 70);
+			// 
+			// tsiDirList_Download
+			// 
+			this.tsiDirList_Download.Name = "tsiDirList_Download";
+			this.tsiDirList_Download.Size = new System.Drawing.Size(112, 22);
+			this.tsiDirList_Download.Text = "下载";
+			// 
+			// tsiDirList_Rename
+			// 
+			this.tsiDirList_Rename.Name = "tsiDirList_Rename";
+			this.tsiDirList_Rename.Size = new System.Drawing.Size(112, 22);
+			this.tsiDirList_Rename.Text = "重命名";
+			// 
+			// tsiDirList_Delete
+			// 
+			this.tsiDirList_Delete.Name = "tsiDirList_Delete";
+			this.tsiDirList_Delete.Size = new System.Drawing.Size(112, 22);
+			this.tsiDirList_Delete.Text = "删除";
 			// 
 			// Form2
 			// 
@@ -504,6 +520,7 @@
 			this.panel3.ResumeLayout(false);
 			this.panel1.ResumeLayout(false);
 			this.panel1.PerformLayout();
+			this.cmsDirList.ResumeLayout(false);
 			this.ResumeLayout(false);
 
 		}
@@ -541,9 +558,11 @@
 		private Panel panel1;
 		private Button button2;
 		private Button button1;
-		private TextBox textBox1;
+		private TextBox txtLocalPath;
 		private Label label2;
-		private Button button3;
-		private Button button4;
+		private ContextMenuStrip cmsDirList;
+		private ToolStripMenuItem tsiDirList_Download;
+		private ToolStripMenuItem tsiDirList_Rename;
+		private ToolStripMenuItem tsiDirList_Delete;
 	}
 }
