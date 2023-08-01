@@ -28,7 +28,7 @@ namespace FtpClient
 			{
 				txtStatus.AppendText("\n");
 			}
-			txtStatus.AppendText($"[{DateTime.Now.ToString("HH:mm:ss")}] {message.Trim()}");
+			txtStatus.AppendText($"[{DateTime.Now:HH:mm:ss}] {message.Trim()}");
 			txtStatus.SelectionStart = txtStatus.Text.Length - 1;
 			txtStatus.SelectionLength = 0;
 			txtStatus.ScrollToCaret();
