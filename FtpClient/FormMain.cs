@@ -13,11 +13,11 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace FtpClient
 {
-	public partial class Form2 : Form
+	public partial class FormMain : Form
 	{
 		FtpService service = new();
 
-		public Form2()
+		public FormMain()
 		{
 			InitializeComponent();
 		}

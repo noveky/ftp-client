@@ -1,6 +1,6 @@
 ﻿namespace FtpClient
 {
-	partial class Form2
+	partial class FormMain
 	{
 		/// <summary>
 		/// Required designer variable.
@@ -494,13 +494,13 @@
 			this.tsiDirList_Delete.Size = new System.Drawing.Size(112, 22);
 			this.tsiDirList_Delete.Text = "删除";
 			// 
-			// Form2
+			// FormMain
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(855, 584);
 			this.Controls.Add(this.tableLayoutPanel1);
-			this.Name = "Form2";
+			this.Name = "FormMain";
 			this.Text = "FTP 客户端";
 			this.tableLayoutPanel1.ResumeLayout(false);
 			this.tableLayoutPanel1.PerformLayout();
