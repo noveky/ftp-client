@@ -8,6 +8,7 @@ using System.Net;
 using System.Security.Cryptography;
 using Microsoft.VisualBasic.Logging;
 using System.Xml.Linq;
+using System.Runtime.CompilerServices;
 
 namespace MyFtp3
 {
@@ -25,61 +26,53 @@ namespace MyFtp3
 	// FTP 服务
 	public class FtpService
 	{
-		FtpWebRequest? request = null;
+		public string Host = ""; // 服务器IP地址
+		public string User = ""; // 登录用户名，为空则匿名
+		public string Pass = ""; // 登录密码
 
-		public string host = ""; // 服务器IP地址
-		public string user = ""; // 登录用户名，为空则匿名
-		public string pass = ""; // 登录密码
+		public string WorkDir = "/"; // 当前工作路径
 
-		public string workDir = "/"; // 当前工作路径
+		// 用事件的方式向用户界面输出应答
+		public delegate void LogDelegate(string? statusStr);
+		public event LogDelegate LogResponse;
 
-		public FtpService() { }
-
-		public string Connect()
+		public FtpService()
 		{
-			request = (FtpWebRequest)WebRequest.Create($"ftp://{host}");
+			LogResponse += _ => { };
+		}
 
-			if (user != string.Empty)
+		public void Connect()
+		{
+			FtpWebRequest request = (FtpWebRequest)WebRequest.Create($"ftp://{Host}");
+
+			if (User != string.Empty)
 			{
-				request.Credentials = request.Credentials = new NetworkCredential(user, pass);
+				request.Credentials = request.Credentials = new NetworkCredential(User, Pass);
 			}
 			request.Method = WebRequestMethods.Ftp.ListDirectory;
 
-			string status;
-
 			using (FtpWebResponse response = (FtpWebResponse)request.GetResponse())
 			{
-				status = response.StatusDescription;
+				LogResponse(response.StatusDescription);
 			}
 
-			workDir = "/";
-			
-			//response.Close();
-
-			/*string status;
-
-			using (FtpWebResponse response = (FtpWebResponse)request.GetResponse())
-			{
-				using (StreamReader reader = new StreamReader(response.GetResponseStream()))
-				{
-					string directoryListing = reader.ReadToEnd();
-					status = directoryListing;
-				}
-			}*/
-
-			//request.Abort();
-
-			return status;
+			WorkDir = "/";
 		}
 
 		// 列出工作路径中所有项的详细信息
 		public DirItemInfo[] ListWorkDir()
 		{
-			request = (FtpWebRequest)WebRequest.Create($"ftp://{host}{workDir}");
+			return ListDir(WorkDir);
+		}
 
-			if (user != string.Empty)
+		// 列出指定路径中所有项的详细信息
+		public DirItemInfo[] ListDir(string dir)
+		{
+			FtpWebRequest request = (FtpWebRequest)WebRequest.Create($"ftp://{Host}{dir}");
+
+			if (User != string.Empty)
 			{
-				request.Credentials = request.Credentials = new NetworkCredential(user, pass);
+				request.Credentials = request.Credentials = new NetworkCredential(User, Pass);
 			}
 			request.Method = WebRequestMethods.Ftp.ListDirectory;
 
@@ -105,8 +98,8 @@ namespace MyFtp3
 				// 获取修改日期和文件大小，如果抛出异常说明不是文件而是目录
 				try
 				{
-					lastModified = GetFileLastModified(workDir + list[i]);
-					size = GetFileSize(workDir + list[i]);
+					lastModified = GetFileLastModified($"{dir}{list[i]}");
+					size = GetFileSize($"{dir}{list[i]}");
 				}
 				catch (Exception)
 				{
@@ -127,11 +120,11 @@ namespace MyFtp3
 
 		public DateTime GetFileLastModified(string file)
 		{
-			request = (FtpWebRequest)WebRequest.Create($"ftp://{host}{file}");
+			FtpWebRequest request = (FtpWebRequest)WebRequest.Create($"ftp://{Host}{file}");
 
-			if (user != string.Empty)
+			if (User != string.Empty)
 			{
-				request.Credentials = request.Credentials = new NetworkCredential(user, pass);
+				request.Credentials = request.Credentials = new NetworkCredential(User, Pass);
 			}
 			request.Method = WebRequestMethods.Ftp.GetDateTimestamp;
 
@@ -147,24 +140,118 @@ namespace MyFtp3
 
 		public long GetFileSize(string file)
 		{
-			request = (FtpWebRequest)WebRequest.Create($"ftp://{host}{file}");
+			FtpWebRequest request = (FtpWebRequest)WebRequest.Create($"ftp://{Host}{file}");
 
-			if (user != string.Empty)
+			if (User != string.Empty)
 			{
-				request.Credentials = request.Credentials = new NetworkCredential(user, pass);
+				request.Credentials = request.Credentials = new NetworkCredential(User, Pass);
 			}
 			request.Method = WebRequestMethods.Ftp.GetFileSize;
 
-			// 获取文件大小字符串
-			string fileSizeStr;
+			long fileSize;
 
 			using (FtpWebResponse response = (FtpWebResponse)request.GetResponse())
 			{
-				fileSizeStr = response.StatusDescription[4..];
+				fileSize = response.ContentLength;
 			}
 
-			// 将字符串转为整数返回
-			return long.Parse(fileSizeStr);
+			return fileSize;
+		}
+
+		public bool FileExists(string file)
+		{
+			FtpWebRequest request = (FtpWebRequest)WebRequest.Create($"ftp://{Host}{file}");
+
+			if (User != string.Empty)
+			{
+				request.Credentials = request.Credentials = new NetworkCredential(User, Pass);
+			}
+			request.Method = WebRequestMethods.Ftp.GetFileSize;
+
+			try
+			{
+				request.GetResponse();
+			}
+			catch
+			{
+				return false;
+			}
+
+			return true;
+		}
+
+		// 异步上传文件
+		public async Task UploadFile(string localFile, string remoteFile)
+		{
+			FtpWebRequest request = (FtpWebRequest)WebRequest.Create($"ftp://{Host}{remoteFile}");
+
+			if (User != string.Empty)
+			{
+				request.Credentials = request.Credentials = new NetworkCredential(User, Pass);
+			}
+			request.Method = WebRequestMethods.Ftp.UploadFile;
+
+			// 用文件流将本地文件上传到服务器
+			using (FileStream fileStream = File.Open(localFile, FileMode.Open, FileAccess.Read))
+			{
+				using Stream requestStream = request.GetRequestStream();
+				await fileStream.CopyToAsync(requestStream);
+			}
+
+			// 上传完成
+			using FtpWebResponse response = (FtpWebResponse)request.GetResponse();
+			LogResponse(response.StatusDescription);
+		}
+
+		public async Task DownloadFile(string remoteFile, string localFile)
+		{
+			FtpWebRequest request = (FtpWebRequest)WebRequest.Create($"ftp://{Host}{remoteFile}");
+
+			if (User != string.Empty)
+			{
+				request.Credentials = request.Credentials = new NetworkCredential(User, Pass);
+			}
+			request.Method = WebRequestMethods.Ftp.DownloadFile;
+
+			using FtpWebResponse response = (FtpWebResponse)request.GetResponse();
+
+			// 用文件流将服务端文件下载到本地
+			using Stream fileStream = File.Open(localFile, FileMode.OpenOrCreate, FileAccess.Write);
+			using Stream responseStream = response.GetResponseStream();
+			await responseStream.CopyToAsync(fileStream);
+
+			// 下载完成
+			LogResponse(response.StatusDescription);
+		}
+
+		public void DeleteFile(string file)
+		{
+			FtpWebRequest request = (FtpWebRequest)WebRequest.Create($"ftp://{Host}{file}");
+
+			if (User != string.Empty)
+			{
+				request.Credentials = request.Credentials = new NetworkCredential(User, Pass);
+			}
+			request.Method = WebRequestMethods.Ftp.DeleteFile;
+
+			using FtpWebResponse response = (FtpWebResponse)request.GetResponse();
+			
+			LogResponse(response.StatusDescription);
+		}
+
+		public void RemoveDirectory(string dir)
+		{
+			FtpWebRequest request = (FtpWebRequest)WebRequest.Create($"ftp://{Host}{dir}");
+
+			if (User != string.Empty)
+			{
+				request.Credentials = request.Credentials = new NetworkCredential(User, Pass);
+			}
+			request.Method = WebRequestMethods.Ftp.RemoveDirectory;
+
+			using FtpWebResponse response = (FtpWebResponse)request.GetResponse();
+
+			LogResponse(response.StatusDescription);
 		}
 	}
 }

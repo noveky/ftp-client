@@ -37,10 +37,10 @@ namespace FtpClient
 		{
 			try
 			{
-				service.host = txtHost.Text;
-				service.user = txtUser.Text;
-				service.pass = txtPass.Text;
-				LogStatus(service.Connect());
+				service.Host = txtHost.Text;
+				service.User = txtUser.Text;
+				service.Pass = txtPass.Text;
+				service.Connect();
 			}
 			catch (Exception ex)
 			{

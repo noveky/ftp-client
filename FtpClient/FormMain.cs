@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.ServiceProcess;
 using System.Text;
@@ -15,11 +16,26 @@ namespace FtpClient
 {
 	public partial class FormMain : Form
 	{
-		FtpService service = new();
+		readonly FtpService service = new();
+
+		// 文件传输任务类
+		class TransferTask
+		{
+			public Task? Task = null;
+			public string FileName = string.Empty;
+			public bool IsUpload = true; // true：上传，false：下载
+			public bool HasCompleted = false;
+
+			public TransferTask() { }
+		}
+
+		readonly List<TransferTask> transferTasks = new();
 
 		public FormMain()
 		{
 			InitializeComponent();
+
+			service.LogResponse += LogResponse;
 		}
 
 		void Log(string message)
@@ -34,17 +50,17 @@ namespace FtpClient
 			txtStatus.ScrollToCaret();
 		}
 
-		void LogReply(string statMsg)
+		void LogResponse(string? statMsg)
 		{
 			Log($"应答：{statMsg}");
 		}
 
-		void LogStatus(string statMsg)
+		void LogStatus(string? statMsg)
 		{
 			Log($"状态：{statMsg}");
 		}
 
-		void LogError(string errMsg)
+		void LogError(string? errMsg)
 		{
 			Log($"错误：{errMsg}");
 		}
@@ -52,7 +68,7 @@ namespace FtpClient
 		// 更改工作路径
 		void ChangeDir(string newDir)
 		{
-			string lstDir = service.workDir; // 更新前的工作路径
+			string lstDir = service.WorkDir; // 更新前的工作路径
 			try
 			{
 				// 将路径的写法规范化
@@ -64,14 +80,14 @@ namespace FtpClient
 
 				if (lstDir != newDir)
 				{
-					service.workDir = newDir;
+					service.WorkDir = newDir;
 					service.ListWorkDir(); // 测试一下新路径是否有效，否则抛出异常，不更新
 
-					LogStatus($"转到路径 {service.workDir}");
+					LogStatus($"转到路径 \"{service.WorkDir}\"");
 				}
 
 				// 获取并显示文件列表
-				Exception? dispDirEx = DisplayDir();
+				Exception? dispDirEx = DisplayDirList();
 				if (dispDirEx != null)
 				{
 					throw dispDirEx;
@@ -80,11 +96,11 @@ namespace FtpClient
 			catch (Exception ex)
 			{
 				LogError(ex.Message);
-				LogStatus($"路径 {newDir} 无效或无法访问");
+				LogStatus($"路径 \"{newDir}\" 无效或无法访问");
 
 				// 回滚路径
-				service.workDir = txtWorkDir.Text = lstDir;
-				DisplayDir();
+				service.WorkDir = txtWorkDir.Text = lstDir;
+				DisplayDirList();
 			}
 		}
 
@@ -108,12 +124,27 @@ namespace FtpClient
 			}
 		}
 
+		// 为确保新文件名不会重复，若原文件名已存在，则在后面加一个(1)，如果仍然存在则括号内数字递增到不存在为止
+		string GetUniqueNameLocalFile(string localFile)
+		{
+			string fileName = Path.GetFileNameWithoutExtension(localFile);
+			string extension = Path.GetExtension(localFile);
+			string newLocalFile = localFile;
+			int count = 1;
+			while (File.Exists(newLocalFile))
+			{
+				newLocalFile = Path.Combine(Path.GetDirectoryName(localFile) ?? "", $"{fileName} ({count}){extension}");
+				++count;
+			}
+			return newLocalFile;
+		}
+
 		// 获取并显示文件列表，返回抛出的异常
-		Exception? DisplayDir()
+		Exception? DisplayDirList()
 		{
 			try
 			{
-				txtWorkDir.Text = service.workDir;
+				txtWorkDir.Text = service.WorkDir;
 				lstWorkDir.Items.Clear();
 
 				// 获得工作目录下所有项的详细信息
@@ -133,7 +164,7 @@ namespace FtpClient
 						Name = info.IsDirectory ? "dir" : "file", // 用Name区分文件和目录
 					};
 
-					// 两个SubItems为同一行的右边两栏，修改日期和大小
+					// 添加修改日期和大小信息
 					if (info.IsDirectory)
 					{
 						item.SubItems.Add("<目录>");
@@ -159,17 +190,143 @@ namespace FtpClient
 			}
 		}
 
+		// 刷新文件列表，输出状态信息
+		void RefreshDirList()
+		{
+			Exception? dispDirEx = DisplayDirList();
+			if (dispDirEx == null)
+			{
+				LogStatus($"刷新文件列表");
+			}
+			else
+			{
+				LogStatus($"刷新文件列表失败");
+			}
+		}
+
+		// 刷新传输列表
+		void RefreshTransferList()
+		{
+			lstTransfer.Items.Clear();
+
+			foreach (var transferTask in transferTasks)
+			{
+				// 创建该任务对应的列表项
+				ListViewItem item = new()
+				{
+					Text = transferTask.FileName,
+					Name = transferTask.IsUpload ? "upload" : "download", // 用Name区分上传和下载
+				};
+
+				// 添加状态信息
+				if (transferTask.IsUpload)
+				{
+					item.SubItems.Add(transferTask.Task?.IsCompleted ?? false ? "上传完成" : "上传中");
+				}
+				else
+				{
+					item.SubItems.Add(transferTask.Task?.IsCompleted ?? false ? "下载完成" : "下载中");
+				}
+
+				// 向列表视图中添加该项
+				lstTransfer.Items.Add(item);
+			}
+		}
+
+		// 递归删除目录及所有子项
+		void DeleteDirectoryWithAll(string dir)
+		{
+			string? name = Path.GetFileName(dir);
+			if (name == "." || name == "..")
+			{
+				return;
+			}
+
+			// 遍历当前目录的一级子项
+			DirItemInfo[] infos = service.ListDir(dir);
+			foreach (var info in infos)
+			{
+				string path = $"{dir}{info.Name}";
+				if (info.IsDirectory)
+				{
+					// 为目录，递归删除
+					path += "/";
+					DeleteDirectoryWithAll(path);
+				}
+				else
+				{
+					// 为文件，直接删除
+					service.DeleteFile(path);
+
+					LogStatus($"删除文件 \"{path}\"");
+				}
+			}
+
+			// 移除空目录
+			service.RemoveDirectory(dir);
+
+			LogStatus($"移除空目录 \"{dir}\"");
+		}
+
+		public async Task UploadFile(string localFile, string remoteFile)
+		{
+			string fileName = Path.GetFileName(localFile);
+
+			// 在传输列表中记录传输任务
+			TransferTask transferTask = new()
+			{
+				FileName = fileName,
+				IsUpload = true,
+			};
+			transferTasks.Add(transferTask);
+			RefreshTransferList();
+
+			LogStatus($"开始上传 {fileName}");
+
+			Task task = service.UploadFile(localFile, remoteFile);
+			transferTask.Task = task;
+			await task;
+
+			LogStatus($"{fileName} 上传完成");
+
+			RefreshTransferList();
+		}
+
+		public async Task DownloadFile(string remoteFile, string localFile)
+		{
+			string fileName = Path.GetFileName(remoteFile);
+
+			// 在传输列表中记录传输任务
+			TransferTask transferTask = new()
+			{
+				FileName = fileName,
+				IsUpload = false,
+			};
+			transferTasks.Add(transferTask);
+			RefreshTransferList();
+
+			LogStatus($"开始下载 {fileName}");
+
+			Task task = service.DownloadFile($"{service.WorkDir}{fileName}", localFile);
+			transferTask.Task = task;
+			await task;
+
+			LogStatus($"{fileName} 下载完成");
+
+			RefreshTransferList();
+		}
+
 		private void btnConnect_Click(object sender, EventArgs e)
 		{
 			try
 			{
-				service.host = txtHost.Text;
-				service.user = txtUser.Text;
-				service.pass = txtPass.Text;
-				LogReply(service.Connect());
-				DisplayDir();
+				service.Host = txtHost.Text;
+				service.User = txtUser.Text;
+				service.Pass = txtPass.Text;
+				service.Connect();
+				DisplayDirList();
 
-				LogStatus($"已连接到 FTP 服务器：{service.host}");
+				LogStatus($"已连接到 FTP 服务器：{service.Host}");
 			}
 			catch (Exception ex)
 			{
@@ -177,13 +334,13 @@ namespace FtpClient
 				LogStatus($"连接或验证失败");
 
 				// 重置服务器地址和验证信息
-				service.host = service.user = service.pass = string.Empty;
+				service.Host = service.User = service.Pass = string.Empty;
 			}
 		}
 
 		private void btnUp_Click(object sender, EventArgs e)
 		{
-			ChangeDir((Path.GetDirectoryName(service.workDir.TrimEnd('/')) ?? "/"));
+			ChangeDir((Path.GetDirectoryName(service.WorkDir.TrimEnd('/')) ?? "/"));
 		}
 
 		private void lstWorkDir_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -199,7 +356,7 @@ namespace FtpClient
 					// 若该项是目录，则转到该目录下
 					if (item.Name == "dir")
 					{
-						ChangeDir(service.workDir.TrimEnd('/') + "/" + item.Text + "/");
+						ChangeDir(service.WorkDir.TrimEnd('/') + "/" + item.Text + "/");
 					}
 				}
 			}
@@ -213,15 +370,7 @@ namespace FtpClient
 
 		private void btnRefresh_Click(object sender, EventArgs e)
 		{
-			Exception? dispDirEx = DisplayDir();
-			if (dispDirEx == null)
-			{
-				LogStatus($"刷新文件列表");
-			}
-			else
-			{
-				LogStatus($"刷新文件列表失败");
-			}
+			RefreshDirList();
 		}
 
 		// 本地路径输入框失去焦点事件
@@ -254,16 +403,28 @@ namespace FtpClient
 
 		private void lstWorkDir_MouseClick(object sender, MouseEventArgs e)
 		{
-			// 获得鼠标单击的项
-			ListViewHitTestInfo hitInfo = lstWorkDir.HitTest(e.X, e.Y);
-			ListViewItem? item = hitInfo.Item;
-
 			if (e.Button == MouseButtons.Right)
 			{
-				if (item != null)
+				if (lstWorkDir.SelectedItems.Count != 0)
 				{
-					// 判断是文件还是目录
-					tsiDirList_Download.Visible = item.Name != "dir"; // 只能下载文件
+					bool selDir = false; // 选择的项目中是否包含目录
+					bool selFile = false; // 选择的项目中是否包含文件
+					foreach (ListViewItem item in lstWorkDir.SelectedItems) {
+						// 判断是文件还是目录
+						if (item.Name == "dir")
+						{
+							selDir |= true;
+						}
+						else
+						{
+							selFile |= true;
+						}
+
+						tsiDirList_Download.Enabled = selFile && !selDir; // 只能下载文件
+						tsiDirList_Rename.Enabled = lstWorkDir.SelectedItems.Count == 1; // 只能重命名单个项目
+						tsiDirList_Delete.Enabled = selFile || selDir;
+
+					}
 
 					// 弹出右键菜单
 					cmsDirList.Show(lstWorkDir.PointToScreen(e.Location));
@@ -287,6 +448,135 @@ namespace FtpClient
 			{
 				ActiveControl = null;
 			}
+		}
+
+		private async void btnUpload_Click(object sender, EventArgs e)
+		{
+			try
+			{
+				OpenFileDialog dialog = new()
+				{
+					Multiselect = true,
+					Title = "上传文件",
+					InitialDirectory = txtLocalPath.Text,
+				};
+				if (dialog.ShowDialog() == DialogResult.OK)
+				{
+					string[] localFiles = dialog.FileNames;
+					foreach (string localFile in localFiles)
+					{
+						string fileName = Path.GetFileName(localFile);
+						string targetFile = $"{service.WorkDir}{fileName}";
+						if (service.FileExists(targetFile))
+						{
+							if (MessageBox.Show($"\"{targetFile}\" 已存在。是否覆盖？", "确认上传", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) != DialogResult.Yes)
+							{
+								continue;
+							}
+						}
+
+						await UploadFile(localFile, targetFile);
+
+						RefreshDirList();
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				LogError(ex.Message);
+			}
+		}
+
+		private async void tsiDirList_Download_Click(object sender, EventArgs e)
+		{
+			try
+			{
+				foreach (ListViewItem item in lstWorkDir.SelectedItems)
+				{
+					string fileName = item.Text;
+					string targetLocalFile = Path.Combine(txtLocalPath.Text, fileName);
+					if (File.Exists(targetLocalFile))
+					{
+						string newLocalFile = GetUniqueNameLocalFile(targetLocalFile);
+
+						LogStatus($"\"{targetLocalFile}\" 已存在，下载到新文件名 {Path.GetFileName(newLocalFile)}");
+
+						targetLocalFile = newLocalFile;
+					}
+
+					await DownloadFile($"{service.WorkDir}{fileName}", targetLocalFile);
+
+					RefreshDirList();
+				}
+			}
+			catch (Exception ex)
+			{
+				LogError(ex.Message);
+			}
+		}
+
+		private void tsiDirList_Delete_Click(object sender, EventArgs e)
+		{
+			try
+			{
+				int selDirCnt = 0; // 选择的项目中包含目录的个数
+				int selFileCnt = 0; // 选择的项目中包含文件的个数
+				foreach (ListViewItem item in lstWorkDir.SelectedItems)
+				{
+					if (item.Name == "dir")
+					{
+						++selDirCnt;
+					}
+					else
+					{
+						++selFileCnt;
+					}
+				}
+
+				// 弹出确认对话框
+				if (MessageBox.Show(
+					selDirCnt != 0 && selFileCnt != 0
+					? $"确认要永久删除这 {selFileCnt} 个文件、{selDirCnt} 个目录及目录中所有子项吗？" 
+					: selDirCnt != 0
+					? $"确认要永久删除这 {selDirCnt} 个目录及目录中所有子项吗？"
+					: $"确认要永久删除这 {selFileCnt} 个文件吗？"
+					, "确认删除", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) != DialogResult.Yes)
+				{
+					return;
+				}
+
+				foreach (ListViewItem item in lstWorkDir.SelectedItems)
+				{
+					string name = item.Text;
+					string path = $"{service.WorkDir}{name}";
+					// 根据项目是文件还是目录，使用不同的删除方式
+					if (item.Name == "dir")
+					{
+						path += "/";
+
+						DeleteDirectoryWithAll(path);
+
+						LogStatus($"目录 \"{path}\" 删除完成");
+					}
+					else
+					{
+						service.DeleteFile(path);
+
+						LogStatus($"删除文件 \"{path}\"");
+					}
+
+					RefreshDirList();
+				}
+			}
+			catch (Exception ex)
+			{
+				LogError(ex.Message);
+			}
+		}
+
+		private void tsiStatus_Clear_Click(object sender, EventArgs e)
+		{
+			txtStatus.Clear();
 		}
 	}
 }

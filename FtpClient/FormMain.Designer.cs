@@ -30,7 +30,6 @@
 		{
 			this.components = new System.ComponentModel.Container();
 			this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-			this.txtStatus = new System.Windows.Forms.RichTextBox();
 			this.tableLayoutPanel7 = new System.Windows.Forms.TableLayoutPanel();
 			this.btnConnect = new System.Windows.Forms.Button();
 			this.tableLayoutPanel9 = new System.Windows.Forms.TableLayoutPanel();
@@ -55,13 +54,21 @@
 			this.columnHeader3 = new System.Windows.Forms.ColumnHeader();
 			this.panel2 = new System.Windows.Forms.Panel();
 			this.panel3 = new System.Windows.Forms.Panel();
-			this.listView1 = new System.Windows.Forms.ListView();
+			this.lstTransfer = new System.Windows.Forms.ListView();
+			this.columnHeader4 = new System.Windows.Forms.ColumnHeader();
+			this.columnHeader5 = new System.Windows.Forms.ColumnHeader();
+			this.cmsTransferList = new System.Windows.Forms.ContextMenuStrip(this.components);
+			this.tsiTransferList_ClearCompleted = new System.Windows.Forms.ToolStripMenuItem();
 			this.label3 = new System.Windows.Forms.Label();
 			this.panel1 = new System.Windows.Forms.Panel();
-			this.button2 = new System.Windows.Forms.Button();
-			this.button1 = new System.Windows.Forms.Button();
+			this.btnMkDir = new System.Windows.Forms.Button();
+			this.btnUpload = new System.Windows.Forms.Button();
 			this.txtLocalPath = new System.Windows.Forms.TextBox();
 			this.label2 = new System.Windows.Forms.Label();
+			this.groupBox1 = new System.Windows.Forms.GroupBox();
+			this.txtStatus = new System.Windows.Forms.RichTextBox();
+			this.cmsStatus = new System.Windows.Forms.ContextMenuStrip(this.components);
+			this.tsiStatus_Clear = new System.Windows.Forms.ToolStripMenuItem();
 			this.cmsDirList = new System.Windows.Forms.ContextMenuStrip(this.components);
 			this.tsiDirList_Download = new System.Windows.Forms.ToolStripMenuItem();
 			this.tsiDirList_Rename = new System.Windows.Forms.ToolStripMenuItem();
@@ -76,7 +83,10 @@
 			this.tableLayoutPanel13.SuspendLayout();
 			this.panel2.SuspendLayout();
 			this.panel3.SuspendLayout();
+			this.cmsTransferList.SuspendLayout();
 			this.panel1.SuspendLayout();
+			this.groupBox1.SuspendLayout();
+			this.cmsStatus.SuspendLayout();
 			this.cmsDirList.SuspendLayout();
 			this.SuspendLayout();
 			// 
@@ -84,30 +94,18 @@
 			// 
 			this.tableLayoutPanel1.ColumnCount = 1;
 			this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-			this.tableLayoutPanel1.Controls.Add(this.txtStatus, 0, 2);
 			this.tableLayoutPanel1.Controls.Add(this.tableLayoutPanel7, 0, 0);
 			this.tableLayoutPanel1.Controls.Add(this.tableLayoutPanel2, 0, 1);
+			this.tableLayoutPanel1.Controls.Add(this.groupBox1, 0, 2);
 			this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
 			this.tableLayoutPanel1.Name = "tableLayoutPanel1";
 			this.tableLayoutPanel1.RowCount = 3;
 			this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
 			this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-			this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 100F));
-			this.tableLayoutPanel1.Size = new System.Drawing.Size(855, 584);
+			this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 150F));
+			this.tableLayoutPanel1.Size = new System.Drawing.Size(715, 500);
 			this.tableLayoutPanel1.TabIndex = 0;
-			// 
-			// txtStatus
-			// 
-			this.txtStatus.BorderStyle = System.Windows.Forms.BorderStyle.None;
-			this.txtStatus.Dock = System.Windows.Forms.DockStyle.Bottom;
-			this.txtStatus.Location = new System.Drawing.Point(3, 487);
-			this.txtStatus.Name = "txtStatus";
-			this.txtStatus.ReadOnly = true;
-			this.txtStatus.Size = new System.Drawing.Size(849, 94);
-			this.txtStatus.TabIndex = 0;
-			this.txtStatus.TabStop = false;
-			this.txtStatus.Text = "";
 			// 
 			// tableLayoutPanel7
 			// 
@@ -260,7 +258,7 @@
 			this.tableLayoutPanel2.RowCount = 1;
 			this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
 			this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-			this.tableLayoutPanel2.Size = new System.Drawing.Size(849, 438);
+			this.tableLayoutPanel2.Size = new System.Drawing.Size(709, 304);
 			this.tableLayoutPanel2.TabIndex = 1;
 			// 
 			// tableLayoutPanel12
@@ -276,7 +274,7 @@
 			this.tableLayoutPanel12.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
 			this.tableLayoutPanel12.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
 			this.tableLayoutPanel12.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-			this.tableLayoutPanel12.Size = new System.Drawing.Size(543, 432);
+			this.tableLayoutPanel12.Size = new System.Drawing.Size(403, 298);
 			this.tableLayoutPanel12.TabIndex = 0;
 			// 
 			// tableLayoutPanel13
@@ -295,13 +293,13 @@
 			this.tableLayoutPanel13.Name = "tableLayoutPanel13";
 			this.tableLayoutPanel13.RowCount = 1;
 			this.tableLayoutPanel13.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-			this.tableLayoutPanel13.Size = new System.Drawing.Size(537, 29);
+			this.tableLayoutPanel13.Size = new System.Drawing.Size(397, 29);
 			this.tableLayoutPanel13.TabIndex = 0;
 			// 
 			// btnRefresh
 			// 
 			this.btnRefresh.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.btnRefresh.Location = new System.Drawing.Point(480, 3);
+			this.btnRefresh.Location = new System.Drawing.Point(340, 3);
 			this.btnRefresh.Name = "btnRefresh";
 			this.btnRefresh.Size = new System.Drawing.Size(54, 23);
 			this.btnRefresh.TabIndex = 2;
@@ -315,7 +313,7 @@
 			this.txtWorkDir.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.txtWorkDir.Location = new System.Drawing.Point(93, 3);
 			this.txtWorkDir.Name = "txtWorkDir";
-			this.txtWorkDir.Size = new System.Drawing.Size(381, 23);
+			this.txtWorkDir.Size = new System.Drawing.Size(241, 23);
 			this.txtWorkDir.TabIndex = 1;
 			this.txtWorkDir.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtWorkDir_KeyDown);
 			this.txtWorkDir.Leave += new System.EventHandler(this.txtWorkDir_Leave);
@@ -354,7 +352,7 @@
 			this.lstWorkDir.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
 			this.lstWorkDir.Location = new System.Drawing.Point(3, 38);
 			this.lstWorkDir.Name = "lstWorkDir";
-			this.lstWorkDir.Size = new System.Drawing.Size(537, 391);
+			this.lstWorkDir.Size = new System.Drawing.Size(397, 257);
 			this.lstWorkDir.TabIndex = 1;
 			this.lstWorkDir.UseCompatibleStateImageBehavior = false;
 			this.lstWorkDir.View = System.Windows.Forms.View.Details;
@@ -381,30 +379,61 @@
 			this.panel2.Controls.Add(this.panel3);
 			this.panel2.Controls.Add(this.panel1);
 			this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.panel2.Location = new System.Drawing.Point(552, 3);
+			this.panel2.Location = new System.Drawing.Point(412, 3);
 			this.panel2.Name = "panel2";
 			this.panel2.Padding = new System.Windows.Forms.Padding(0, 0, 3, 3);
-			this.panel2.Size = new System.Drawing.Size(294, 432);
+			this.panel2.Size = new System.Drawing.Size(294, 298);
 			this.panel2.TabIndex = 1;
 			// 
 			// panel3
 			// 
-			this.panel3.Controls.Add(this.listView1);
+			this.panel3.Controls.Add(this.lstTransfer);
 			this.panel3.Controls.Add(this.label3);
 			this.panel3.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.panel3.Location = new System.Drawing.Point(0, 89);
 			this.panel3.Name = "panel3";
-			this.panel3.Size = new System.Drawing.Size(291, 340);
+			this.panel3.Size = new System.Drawing.Size(291, 206);
 			this.panel3.TabIndex = 0;
 			// 
-			// listView1
+			// lstTransfer
 			// 
-			this.listView1.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.listView1.Location = new System.Drawing.Point(0, 23);
-			this.listView1.Name = "listView1";
-			this.listView1.Size = new System.Drawing.Size(291, 317);
-			this.listView1.TabIndex = 2;
-			this.listView1.UseCompatibleStateImageBehavior = false;
+			this.lstTransfer.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeader4,
+            this.columnHeader5});
+			this.lstTransfer.ContextMenuStrip = this.cmsTransferList;
+			this.lstTransfer.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.lstTransfer.FullRowSelect = true;
+			this.lstTransfer.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
+			this.lstTransfer.Location = new System.Drawing.Point(0, 23);
+			this.lstTransfer.Name = "lstTransfer";
+			this.lstTransfer.Size = new System.Drawing.Size(291, 183);
+			this.lstTransfer.TabIndex = 2;
+			this.lstTransfer.UseCompatibleStateImageBehavior = false;
+			this.lstTransfer.View = System.Windows.Forms.View.Details;
+			// 
+			// columnHeader4
+			// 
+			this.columnHeader4.Text = "文件名";
+			this.columnHeader4.Width = 180;
+			// 
+			// columnHeader5
+			// 
+			this.columnHeader5.Text = "状态";
+			this.columnHeader5.Width = 100;
+			// 
+			// cmsTransferList
+			// 
+			this.cmsTransferList.DropShadowEnabled = false;
+			this.cmsTransferList.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.tsiTransferList_ClearCompleted});
+			this.cmsTransferList.Name = "cmsTransferList";
+			this.cmsTransferList.Size = new System.Drawing.Size(137, 26);
+			// 
+			// tsiTransferList_ClearCompleted
+			// 
+			this.tsiTransferList_ClearCompleted.Name = "tsiTransferList_ClearCompleted";
+			this.tsiTransferList_ClearCompleted.Size = new System.Drawing.Size(136, 22);
+			this.tsiTransferList_ClearCompleted.Text = "清除已完成";
 			// 
 			// label3
 			// 
@@ -418,8 +447,8 @@
 			// 
 			// panel1
 			// 
-			this.panel1.Controls.Add(this.button2);
-			this.panel1.Controls.Add(this.button1);
+			this.panel1.Controls.Add(this.btnMkDir);
+			this.panel1.Controls.Add(this.btnUpload);
 			this.panel1.Controls.Add(this.txtLocalPath);
 			this.panel1.Controls.Add(this.label2);
 			this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
@@ -428,23 +457,24 @@
 			this.panel1.Size = new System.Drawing.Size(291, 89);
 			this.panel1.TabIndex = 1;
 			// 
-			// button2
+			// btnMkDir
 			// 
-			this.button2.Location = new System.Drawing.Point(148, 3);
-			this.button2.Name = "button2";
-			this.button2.Size = new System.Drawing.Size(140, 29);
-			this.button2.TabIndex = 1;
-			this.button2.Text = "新建目录";
-			this.button2.UseVisualStyleBackColor = true;
+			this.btnMkDir.Location = new System.Drawing.Point(148, 3);
+			this.btnMkDir.Name = "btnMkDir";
+			this.btnMkDir.Size = new System.Drawing.Size(140, 29);
+			this.btnMkDir.TabIndex = 1;
+			this.btnMkDir.Text = "新建目录";
+			this.btnMkDir.UseVisualStyleBackColor = true;
 			// 
-			// button1
+			// btnUpload
 			// 
-			this.button1.Location = new System.Drawing.Point(3, 3);
-			this.button1.Name = "button1";
-			this.button1.Size = new System.Drawing.Size(140, 29);
-			this.button1.TabIndex = 0;
-			this.button1.Text = "上传文件";
-			this.button1.UseVisualStyleBackColor = true;
+			this.btnUpload.Location = new System.Drawing.Point(3, 3);
+			this.btnUpload.Name = "btnUpload";
+			this.btnUpload.Size = new System.Drawing.Size(140, 29);
+			this.btnUpload.TabIndex = 0;
+			this.btnUpload.Text = "上传文件";
+			this.btnUpload.UseVisualStyleBackColor = true;
+			this.btnUpload.Click += new System.EventHandler(this.btnUpload_Click);
 			// 
 			// txtLocalPath
 			// 
@@ -454,6 +484,7 @@
 			this.txtLocalPath.PlaceholderText = "未设置";
 			this.txtLocalPath.Size = new System.Drawing.Size(291, 23);
 			this.txtLocalPath.TabIndex = 2;
+			this.txtLocalPath.Text = "D:\\ftp-test\\client\\";
 			this.txtLocalPath.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtLocalPath_KeyDown);
 			this.txtLocalPath.Leave += new System.EventHandler(this.txtLocalPath_Leave);
 			// 
@@ -465,6 +496,46 @@
 			this.label2.Size = new System.Drawing.Size(80, 17);
 			this.label2.TabIndex = 9;
 			this.label2.Text = "本地默认路径";
+			// 
+			// groupBox1
+			// 
+			this.groupBox1.Controls.Add(this.txtStatus);
+			this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.groupBox1.Location = new System.Drawing.Point(9, 350);
+			this.groupBox1.Margin = new System.Windows.Forms.Padding(9, 0, 9, 9);
+			this.groupBox1.Name = "groupBox1";
+			this.groupBox1.Size = new System.Drawing.Size(697, 141);
+			this.groupBox1.TabIndex = 2;
+			this.groupBox1.TabStop = false;
+			this.groupBox1.Text = "输出";
+			// 
+			// txtStatus
+			// 
+			this.txtStatus.BorderStyle = System.Windows.Forms.BorderStyle.None;
+			this.txtStatus.ContextMenuStrip = this.cmsStatus;
+			this.txtStatus.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.txtStatus.Location = new System.Drawing.Point(3, 19);
+			this.txtStatus.Name = "txtStatus";
+			this.txtStatus.ReadOnly = true;
+			this.txtStatus.Size = new System.Drawing.Size(691, 119);
+			this.txtStatus.TabIndex = 1;
+			this.txtStatus.TabStop = false;
+			this.txtStatus.Text = "";
+			// 
+			// cmsStatus
+			// 
+			this.cmsStatus.DropShadowEnabled = false;
+			this.cmsStatus.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.tsiStatus_Clear});
+			this.cmsStatus.Name = "cmsStatus";
+			this.cmsStatus.Size = new System.Drawing.Size(101, 26);
+			// 
+			// tsiStatus_Clear
+			// 
+			this.tsiStatus_Clear.Name = "tsiStatus_Clear";
+			this.tsiStatus_Clear.Size = new System.Drawing.Size(100, 22);
+			this.tsiStatus_Clear.Text = "清空";
+			this.tsiStatus_Clear.Click += new System.EventHandler(this.tsiStatus_Clear_Click);
 			// 
 			// cmsDirList
 			// 
@@ -481,6 +552,7 @@
 			this.tsiDirList_Download.Name = "tsiDirList_Download";
 			this.tsiDirList_Download.Size = new System.Drawing.Size(112, 22);
 			this.tsiDirList_Download.Text = "下载";
+			this.tsiDirList_Download.Click += new System.EventHandler(this.tsiDirList_Download_Click);
 			// 
 			// tsiDirList_Rename
 			// 
@@ -493,12 +565,13 @@
 			this.tsiDirList_Delete.Name = "tsiDirList_Delete";
 			this.tsiDirList_Delete.Size = new System.Drawing.Size(112, 22);
 			this.tsiDirList_Delete.Text = "删除";
+			this.tsiDirList_Delete.Click += new System.EventHandler(this.tsiDirList_Delete_Click);
 			// 
 			// FormMain
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(855, 584);
+			this.ClientSize = new System.Drawing.Size(715, 500);
 			this.Controls.Add(this.tableLayoutPanel1);
 			this.Name = "FormMain";
 			this.Text = "FTP 客户端";
@@ -518,8 +591,11 @@
 			this.tableLayoutPanel13.PerformLayout();
 			this.panel2.ResumeLayout(false);
 			this.panel3.ResumeLayout(false);
+			this.cmsTransferList.ResumeLayout(false);
 			this.panel1.ResumeLayout(false);
 			this.panel1.PerformLayout();
+			this.groupBox1.ResumeLayout(false);
+			this.cmsStatus.ResumeLayout(false);
 			this.cmsDirList.ResumeLayout(false);
 			this.ResumeLayout(false);
 
@@ -539,7 +615,6 @@
 		private TableLayoutPanel tableLayoutPanel4;
 		private Label label1;
 		private TextBox txtUser;
-		private RichTextBox txtStatus;
 		private TableLayoutPanel tableLayoutPanel2;
 		private TableLayoutPanel tableLayoutPanel12;
 		private TableLayoutPanel tableLayoutPanel13;
@@ -553,16 +628,24 @@
 		private ColumnHeader columnHeader3;
 		private Panel panel2;
 		private Panel panel3;
-		private ListView listView1;
+		private ListView lstTransfer;
 		private Label label3;
 		private Panel panel1;
-		private Button button2;
-		private Button button1;
+		private Button btnMkDir;
+		private Button btnUpload;
 		private TextBox txtLocalPath;
 		private Label label2;
 		private ContextMenuStrip cmsDirList;
 		private ToolStripMenuItem tsiDirList_Download;
 		private ToolStripMenuItem tsiDirList_Rename;
 		private ToolStripMenuItem tsiDirList_Delete;
+		private ContextMenuStrip cmsStatus;
+		private ToolStripMenuItem tsiStatus_Clear;
+		private GroupBox groupBox1;
+		private RichTextBox txtStatus;
+		private ColumnHeader columnHeader4;
+		private ColumnHeader columnHeader5;
+		private ContextMenuStrip cmsTransferList;
+		private ToolStripMenuItem tsiTransferList_ClearCompleted;
 	}
 }
