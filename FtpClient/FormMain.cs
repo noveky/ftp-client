@@ -209,7 +209,7 @@ namespace FtpClient
 				{
 					selectedIndexes.Add(index);
 				}
-				int scrollPos = lstTransfer.TopItem?.Index ?? -1;
+				int scrollTopIndex = lstTransfer.TopItem?.Index ?? -1;
 
 				lstTransfer.BeginUpdate();
 
@@ -228,9 +228,9 @@ namespace FtpClient
 					if (transferTask.IsUpload)
 					{
 						item.SubItems.Add(
-							transferTask.Task?.IsCompletedSuccessfully ?? false
+							transferTask.IsSucceeded
 							? "上传完成"
-							: transferTask.Task?.IsCompleted ?? false
+							: transferTask.IsFaulted
 							? "上传失败"
 							: $"上传中 {transferTask.Progress:0.00%}"
 						);
@@ -238,9 +238,9 @@ namespace FtpClient
 					else
 					{
 						item.SubItems.Add(
-							transferTask.Task?.IsCompletedSuccessfully ?? false
+							transferTask.IsSucceeded
 							? "下载完成"
-							: transferTask.Task?.IsCompleted ?? false
+							: transferTask.IsFaulted
 							? "下载失败"
 							: $"下载中 {transferTask.Progress:0.00%}"
 						);
@@ -253,27 +253,18 @@ namespace FtpClient
 					item.Selected = selectedIndexes.Contains(item.Index);
 				}
 				// 因为刷新了所有列表项，所以要重新设置滚动状态
-				if (scrollPos >= 0 && scrollPos < lstTransfer.Items.Count)
+				if (scrollTopIndex >= 0 && scrollTopIndex < lstTransfer.Items.Count)
 				{
-					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
-					lstTransfer.EnsureVisible(scrollPos);
-					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
-					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
-					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
-					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
-					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
-					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
-					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
-					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
-					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
-					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
-					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
-					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
-					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
-					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
-					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
-					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
-					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
+					lstTransfer.TopItem = lstTransfer.Items[scrollTopIndex];
+					int scrollBottomIndex = scrollTopIndex + lstTransfer.Height / lstTransfer.GetItemRect(scrollTopIndex).Height - 2;
+					for (int i = 2; i-- > 0;)
+					{
+						lstTransfer.EnsureVisible(scrollTopIndex);
+						if (scrollBottomIndex >= 0 && scrollBottomIndex < lstTransfer.Items.Count)
+						{
+							lstTransfer.EnsureVisible(scrollBottomIndex);
+						}
+					}
 				}
 			}
 			finally
@@ -326,6 +317,8 @@ namespace FtpClient
 			{
 				FileName = Path.GetFileName(remoteFile),
 				IsUpload = true,
+				LocalFile = localFile,
+				RemoteFile = remoteFile,
 			};
 			service.transferTasks.Add(transferTask);
 			RefreshTransferList();
@@ -361,6 +354,8 @@ namespace FtpClient
 			{
 				FileName = Path.GetFileName(localFile),
 				IsUpload = false,
+				LocalFile = localFile,
+				RemoteFile = remoteFile,
 			};
 			service.transferTasks.Add(transferTask);
 			RefreshTransferList();
@@ -680,6 +675,7 @@ namespace FtpClient
 
 		private void tmrRefreshTransfer_Tick(object sender, EventArgs e)
 		{
+			if (service.transferTasks.Any(t => t.Task?.IsCompleted ?? false))
 			RefreshTransferList();
 		}
 	}

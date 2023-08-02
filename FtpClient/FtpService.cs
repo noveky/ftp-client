@@ -28,9 +28,17 @@ namespace MyFtp3
 	{
 		public Task? Task = null;
 		public string FileName = string.Empty;
+		public string LocalFile = string.Empty;
+		public string RemoteFile = string.Empty;
 		public bool IsUpload = true; // true：上传，false：下载
-		public bool HasCompleted = false;
 		public double Progress = 0;
+		public bool Paused = false;
+
+		// 方便使用的get属性
+		public bool IsCompleted => Task?.IsCompleted ?? false;
+		public bool IsRunning => !IsCompleted;
+		public bool IsSucceeded => Task?.IsCompletedSuccessfully ?? false;
+		public bool IsFaulted => Task?.IsFaulted ?? false;
 
 		public TransferTask() { }
 	}
@@ -211,6 +219,15 @@ namespace MyFtp3
 			// 用文件流将本地文件上传到服务器
 			using (FileStream fileStream = File.Open(localFile, FileMode.Open, FileAccess.Read))
 			{
+				long serverFileSize = GetFileSize(remoteFile);
+				if (serverFileSize > 0)
+				{
+					// 断点续传
+					request.ContentOffset = serverFileSize;
+					fileStream.Seek(serverFileSize, SeekOrigin.Begin);
+					request.ContentLength = fileStream.Length - serverFileSize;
+				}
+
 				using Stream requestStream = request.GetRequestStream();
 				//await fileStream.CopyToAsync(requestStream);
 
