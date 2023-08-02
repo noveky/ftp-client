@@ -81,8 +81,9 @@ namespace MyFtp3
 		public void Cancel()
 		{
 			if (!CanBeCanceled) return;
-
+			
 			canceled = true;
+
 			Task = null;
 		}
 	}
@@ -100,10 +101,10 @@ namespace MyFtp3
 
 		public static readonly List<TransferTask> transferTasks = new();
 
-		// 用事件的方式向用户界面输出应答、通知更新传输列表
-		public static event Action<string?>? GotResponse;
+		// 用事件的方式向用户界面输出应答、通知更新文件列表
+		public static event Action<string?>? LogResponse;
 		public static event Action<string?>? LogInfo;
-		public static event Action? UpdatedTransferTasks;
+		public static event Action? RefreshDirList;
 
 		public static void Connect()
 		{
@@ -117,7 +118,7 @@ namespace MyFtp3
 
 			using (FtpWebResponse response = (FtpWebResponse)request.GetResponse())
 			{
-				GotResponse(response.StatusDescription);
+				LogResponse?.Invoke(response.StatusDescription);
 			}
 
 			WorkDir = "/";
@@ -295,7 +296,7 @@ namespace MyFtp3
 						request.ContentOffset = startPosition;
 						fileStream.Seek(startPosition, SeekOrigin.Begin);
 
-						LogInfo($"{Path.GetFileName(remoteFile)} 开始断点续传 {FileSystem.GetSizeStr(startPosition)} / {FileSystem.GetSizeStr(fileSize)}");
+						LogInfo?.Invoke($"{Path.GetFileName(remoteFile)} 开始断点续传 {FileSystem.GetSizeStr(startPosition)} / {FileSystem.GetSizeStr(fileSize)}");
 					}
 				}
 
@@ -316,6 +317,12 @@ namespace MyFtp3
 					{
 						request.Abort();
 
+						if (transferTask.IsCanceled)
+						{
+							DeleteFile(remoteFile);
+							RefreshDirList?.Invoke();
+						}
+
 						return;
 					}
 
@@ -325,7 +332,7 @@ namespace MyFtp3
 
 			// 上传完成
 			using FtpWebResponse response = (FtpWebResponse)request.GetResponse();
-			GotResponse(response.StatusDescription);
+			LogResponse?.Invoke(response.StatusDescription);
 		}
 
 		public static async Task DownloadFile(string remoteFile, string localFile, TransferTask transferTask, bool allowBreakpointResume)
@@ -351,7 +358,7 @@ namespace MyFtp3
 					request.ContentOffset = startPosition;
 					fileStream.Seek(startPosition, SeekOrigin.Begin);
 
-					LogInfo($"{Path.GetFileName(remoteFile)} 开始断点续传 {FileSystem.GetSizeStr(startPosition)} / {FileSystem.GetSizeStr(fileSize)}");
+					LogInfo?.Invoke($"{Path.GetFileName(remoteFile)} 开始断点续传 {FileSystem.GetSizeStr(startPosition)} / {FileSystem.GetSizeStr(fileSize)}");
 				}
 			}
 
@@ -373,6 +380,11 @@ namespace MyFtp3
 				{
 					request.Abort();
 
+					if (transferTask.IsCanceled)
+					{
+						File.Delete(localFile);
+					}
+
 					return;
 				}
 
@@ -380,7 +392,7 @@ namespace MyFtp3
 			}
 
 			// 下载完成
-			GotResponse(response.StatusDescription);
+			LogResponse?.Invoke(response.StatusDescription);
 		}
 
 		public static void DeleteFile(string file)
@@ -395,7 +407,7 @@ namespace MyFtp3
 
 			using FtpWebResponse response = (FtpWebResponse)request.GetResponse();
 			
-			GotResponse(response.StatusDescription);
+			LogResponse?.Invoke(response.StatusDescription);
 		}
 
 		public static void RemoveDirectory(string dir)
@@ -410,7 +422,7 @@ namespace MyFtp3
 
 			using FtpWebResponse response = (FtpWebResponse)request.GetResponse();
 
-			GotResponse(response.StatusDescription);
+			LogResponse?.Invoke(response.StatusDescription);
 		}
 	}
 }

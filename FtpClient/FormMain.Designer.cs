@@ -214,7 +214,7 @@
 			this.txtHost.Name = "txtHost";
 			this.txtHost.Size = new System.Drawing.Size(144, 23);
 			this.txtHost.TabIndex = 0;
-			this.txtHost.Text = "localhost";
+			this.txtHost.Text = "127.0.0.1";
 			// 
 			// tableLayoutPanel4
 			// 
@@ -250,6 +250,7 @@
 			this.txtUser.Name = "txtUser";
 			this.txtUser.Size = new System.Drawing.Size(94, 23);
 			this.txtUser.TabIndex = 0;
+			this.txtUser.Text = "anonymous";
 			// 
 			// tableLayoutPanel2
 			// 
@@ -552,40 +553,40 @@
             this.tsiTransferList_Cancel,
             this.tsiTransferList_RemoveInactive});
 			this.cmsTransferList.Name = "cmsTransferList";
-			this.cmsTransferList.Size = new System.Drawing.Size(181, 136);
+			this.cmsTransferList.Size = new System.Drawing.Size(161, 114);
 			// 
 			// tsiTransferList_Pause
 			// 
 			this.tsiTransferList_Pause.Name = "tsiTransferList_Pause";
-			this.tsiTransferList_Pause.Size = new System.Drawing.Size(180, 22);
+			this.tsiTransferList_Pause.Size = new System.Drawing.Size(160, 22);
 			this.tsiTransferList_Pause.Text = "暂停";
 			this.tsiTransferList_Pause.Click += new System.EventHandler(this.tsiTransferList_Pause_Click);
 			// 
 			// tsiTransferList_Unpause
 			// 
 			this.tsiTransferList_Unpause.Name = "tsiTransferList_Unpause";
-			this.tsiTransferList_Unpause.Size = new System.Drawing.Size(180, 22);
+			this.tsiTransferList_Unpause.Size = new System.Drawing.Size(160, 22);
 			this.tsiTransferList_Unpause.Text = "继续";
 			this.tsiTransferList_Unpause.Click += new System.EventHandler(this.tsiTransferList_Unpause_Click);
 			// 
 			// tsiTransferList_Retry
 			// 
 			this.tsiTransferList_Retry.Name = "tsiTransferList_Retry";
-			this.tsiTransferList_Retry.Size = new System.Drawing.Size(180, 22);
+			this.tsiTransferList_Retry.Size = new System.Drawing.Size(160, 22);
 			this.tsiTransferList_Retry.Text = "重试";
 			this.tsiTransferList_Retry.Click += new System.EventHandler(this.tsiTransferList_Retry_Click);
 			// 
 			// tsiTransferList_Cancel
 			// 
 			this.tsiTransferList_Cancel.Name = "tsiTransferList_Cancel";
-			this.tsiTransferList_Cancel.Size = new System.Drawing.Size(180, 22);
+			this.tsiTransferList_Cancel.Size = new System.Drawing.Size(160, 22);
 			this.tsiTransferList_Cancel.Text = "取消";
 			this.tsiTransferList_Cancel.Click += new System.EventHandler(this.tsiTransferList_Cancel_Click);
 			// 
 			// tsiTransferList_RemoveInactive
 			// 
 			this.tsiTransferList_RemoveInactive.Name = "tsiTransferList_RemoveInactive";
-			this.tsiTransferList_RemoveInactive.Size = new System.Drawing.Size(180, 22);
+			this.tsiTransferList_RemoveInactive.Size = new System.Drawing.Size(160, 22);
 			this.tsiTransferList_RemoveInactive.Text = "清除非活跃任务";
 			this.tsiTransferList_RemoveInactive.Click += new System.EventHandler(this.tsiTransferList_RemoveInactive_Click);
 			// 

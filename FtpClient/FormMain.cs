@@ -14,6 +14,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Tab;
 using System.Diagnostics;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
+using System.Collections;
 
 namespace FtpClient
 {
@@ -54,9 +55,13 @@ namespace FtpClient
 		{
 			InitializeComponent();
 
-			FtpService.GotResponse += LogResponse;
+			DoubleBuffered = true;
+
+			FtpService.LogResponse += LogResponse;
 			FtpService.LogInfo += LogInfo;
-			FtpService.UpdatedTransferTasks += RefreshTransferList;
+			FtpService.RefreshDirList += RefreshDirList;
+
+			LocalPath = txtLocalPath.Text;
 		}
 
 		void Log(string message)
@@ -348,18 +353,22 @@ namespace FtpClient
 
 		async Task DownloadFile(string remoteFile, string localFile, TransferTask? transferTask = null)
 		{
-			if (File.Exists(localFile))
+			if (transferTask == null) // 新下载任务
 			{
-				string newLocalFile = FileSystem.GetUniqueNameLocalFile(localFile);
+				// 重命名同名文件
+				if (File.Exists(localFile))
+				{
+					string newLocalFile = FileSystem.GetUniqueNameLocalFile(localFile);
 
-				LogStatus($"\"{localFile}\" 已存在，下载到新文件名 {Path.GetFileName(newLocalFile)}");
+					LogStatus($"\"{localFile}\" 已存在，下载到新文件名 {Path.GetFileName(newLocalFile)}");
 
-				localFile = newLocalFile;
+					localFile = newLocalFile;
+				}
 			}
 
-			string fileName = Path.GetFileName(localFile);
+			bool allowBreakpointResume = transferTask != null; // 继续或重试下载的任务才能断点续传
 
-			bool allowBreakpointResume = transferTask != null;
+			string fileName = Path.GetFileName(localFile);
 
 			// 在传输列表中记录传输任务
 			if (transferTask == null)
@@ -761,32 +770,36 @@ namespace FtpClient
 
 		private void tsiTransferList_Pause_Click(object sender, EventArgs e)
 		{
-			SelectedTransferTasks.ForEach(tTask => tTask.Pause());
+			SelectedTransferTasks.ForEach(tTask =>
+			{
+				tTask.Pause();
+
+				LogStatus($"暂停{tTask.OperationName} {tTask.FileName}");
+			});
 		}
 
-		async Task ResumeTransferTask(TransferTask transferTask)
+		void ResumeTransferTask(TransferTask transferTask)
 		{
-			Task task = transferTask.IsUpload
+			var _ = transferTask.IsUpload
 				? UploadFile(transferTask.LocalFile, transferTask.RemoteFile, transferTask)
 				: DownloadFile(transferTask.RemoteFile, transferTask.LocalFile, transferTask);
-			await task;
 		}
 
 		private void tsiTransferList_Unpause_Click(object sender, EventArgs e)
 		{
-			SelectedTransferTasks.ForEach(async tTask =>
+			SelectedTransferTasks.ForEach(tTask =>
 			{
 				tTask.Unpause();
-				await ResumeTransferTask(tTask);
+				ResumeTransferTask(tTask);
 			});
 		}
 
 		private void tsiTransferList_Retry_Click(object sender, EventArgs e)
 		{
-			SelectedTransferTasks.ForEach(async tTask =>
+			SelectedTransferTasks.ForEach(tTask =>
 			{
 				tTask.Retry();
-				await ResumeTransferTask(tTask);
+				ResumeTransferTask(tTask);
 			});
 		}
 
@@ -795,22 +808,6 @@ namespace FtpClient
 			SelectedTransferTasks.ForEach(tTask =>
 			{
 				tTask.Cancel();
-
-				try
-				{
-					if (tTask.IsUpload)
-					{
-						FtpService.DeleteFile(tTask.RemoteFile);
-					}
-					else
-					{
-						File.Delete(tTask.LocalFile);
-					}
-				}
-				catch (Exception ex)
-				{
-					LogError(ex.Message);
-				}
 
 				LogStatus($"取消{tTask.OperationName} {tTask.FileName}");
 
