@@ -73,6 +73,7 @@
 			this.tsiDirList_Download = new System.Windows.Forms.ToolStripMenuItem();
 			this.tsiDirList_Rename = new System.Windows.Forms.ToolStripMenuItem();
 			this.tsiDirList_Delete = new System.Windows.Forms.ToolStripMenuItem();
+			this.tmrRefreshTransfer = new System.Windows.Forms.Timer(this.components);
 			this.tableLayoutPanel1.SuspendLayout();
 			this.tableLayoutPanel7.SuspendLayout();
 			this.tableLayoutPanel9.SuspendLayout();
@@ -414,7 +415,7 @@
 			// columnHeader4
 			// 
 			this.columnHeader4.Text = "文件名";
-			this.columnHeader4.Width = 180;
+			this.columnHeader4.Width = 170;
 			// 
 			// columnHeader5
 			// 
@@ -427,13 +428,13 @@
 			this.cmsTransferList.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.tsiTransferList_ClearCompleted});
 			this.cmsTransferList.Name = "cmsTransferList";
-			this.cmsTransferList.Size = new System.Drawing.Size(137, 26);
+			this.cmsTransferList.Size = new System.Drawing.Size(161, 26);
 			// 
 			// tsiTransferList_ClearCompleted
 			// 
 			this.tsiTransferList_ClearCompleted.Name = "tsiTransferList_ClearCompleted";
-			this.tsiTransferList_ClearCompleted.Size = new System.Drawing.Size(136, 22);
-			this.tsiTransferList_ClearCompleted.Text = "清除已完成";
+			this.tsiTransferList_ClearCompleted.Size = new System.Drawing.Size(160, 22);
+			this.tsiTransferList_ClearCompleted.Text = "清除已结束任务";
 			// 
 			// label3
 			// 
@@ -465,6 +466,7 @@
 			this.btnMkDir.TabIndex = 1;
 			this.btnMkDir.Text = "新建目录";
 			this.btnMkDir.UseVisualStyleBackColor = true;
+			this.btnMkDir.Click += new System.EventHandler(this.btnMkDir_Click);
 			// 
 			// btnUpload
 			// 
@@ -567,6 +569,12 @@
 			this.tsiDirList_Delete.Text = "删除";
 			this.tsiDirList_Delete.Click += new System.EventHandler(this.tsiDirList_Delete_Click);
 			// 
+			// tmrRefreshTransfer
+			// 
+			this.tmrRefreshTransfer.Enabled = true;
+			this.tmrRefreshTransfer.Interval = 500;
+			this.tmrRefreshTransfer.Tick += new System.EventHandler(this.tmrRefreshTransfer_Tick);
+			// 
 			// FormMain
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
@@ -647,5 +655,6 @@
 		private ColumnHeader columnHeader5;
 		private ContextMenuStrip cmsTransferList;
 		private ToolStripMenuItem tsiTransferList_ClearCompleted;
+		private System.Windows.Forms.Timer tmrRefreshTransfer;
 	}
 }

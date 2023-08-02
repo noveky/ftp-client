@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using MyFtp3;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Tab;
 
 namespace FtpClient
 {
@@ -18,24 +19,12 @@ namespace FtpClient
 	{
 		readonly FtpService service = new();
 
-		// 文件传输任务类
-		class TransferTask
-		{
-			public Task? Task = null;
-			public string FileName = string.Empty;
-			public bool IsUpload = true; // true：上传，false：下载
-			public bool HasCompleted = false;
-
-			public TransferTask() { }
-		}
-
-		readonly List<TransferTask> transferTasks = new();
-
 		public FormMain()
 		{
 			InitializeComponent();
 
-			service.LogResponse += LogResponse;
+			service.GotResponse += LogResponse;
+			service.UpdatedTransferTasks += RefreshTransferList;
 		}
 
 		void Log(string message)
@@ -87,11 +76,7 @@ namespace FtpClient
 				}
 
 				// 获取并显示文件列表
-				Exception? dispDirEx = DisplayDirList();
-				if (dispDirEx != null)
-				{
-					throw dispDirEx;
-				}
+				DisplayDirList(throwException: true);
 			}
 			catch (Exception ex)
 			{
@@ -139,12 +124,15 @@ namespace FtpClient
 			return newLocalFile;
 		}
 
-		// 获取并显示文件列表，返回抛出的异常
-		Exception? DisplayDirList()
+		// 获取并显示文件列表
+		void DisplayDirList(bool throwException = false)
 		{
 			try
 			{
 				txtWorkDir.Text = service.WorkDir;
+
+				lstWorkDir.BeginUpdate();
+
 				lstWorkDir.Items.Clear();
 
 				// 获得工作目录下所有项的详细信息
@@ -179,26 +167,32 @@ namespace FtpClient
 					// 向列表视图中添加该项
 					lstWorkDir.Items.Add(item);
 				}
-
-				return null;
 			}
 			catch (Exception ex)
 			{
 				LogError(ex.Message);
 
-				return ex;
+				if (throwException)
+				{
+					throw;
+				}
+			}
+			finally
+			{
+				lstWorkDir.EndUpdate();
 			}
 		}
 
 		// 刷新文件列表，输出状态信息
 		void RefreshDirList()
 		{
-			Exception? dispDirEx = DisplayDirList();
-			if (dispDirEx == null)
+			try
 			{
+				DisplayDirList(throwException: true);
+
 				LogStatus($"刷新文件列表");
 			}
-			else
+			catch
 			{
 				LogStatus($"刷新文件列表失败");
 			}
@@ -207,29 +201,84 @@ namespace FtpClient
 		// 刷新传输列表
 		void RefreshTransferList()
 		{
-			lstTransfer.Items.Clear();
-
-			foreach (var transferTask in transferTasks)
+			try
 			{
-				// 创建该任务对应的列表项
-				ListViewItem item = new()
+				// 记录一下刷新选中了哪些项，滚动到了什么位置
+				HashSet<int> selectedIndexes = new();
+				foreach (int index in lstTransfer.SelectedIndices)
 				{
-					Text = transferTask.FileName,
-					Name = transferTask.IsUpload ? "upload" : "download", // 用Name区分上传和下载
-				};
-
-				// 添加状态信息
-				if (transferTask.IsUpload)
-				{
-					item.SubItems.Add(transferTask.Task?.IsCompleted ?? false ? "上传完成" : "上传中");
+					selectedIndexes.Add(index);
 				}
-				else
-				{
-					item.SubItems.Add(transferTask.Task?.IsCompleted ?? false ? "下载完成" : "下载中");
-				}
+				int scrollPos = lstTransfer.TopItem?.Index ?? -1;
 
-				// 向列表视图中添加该项
-				lstTransfer.Items.Add(item);
+				lstTransfer.BeginUpdate();
+
+				lstTransfer.Items.Clear();
+
+				foreach (var transferTask in service.transferTasks)
+				{
+					// 创建该任务对应的列表项
+					ListViewItem item = new()
+					{
+						Text = transferTask.FileName,
+						Name = transferTask.IsUpload ? "upload" : "download", // 用Name区分上传和下载
+					};
+
+					// 添加状态信息
+					if (transferTask.IsUpload)
+					{
+						item.SubItems.Add(
+							transferTask.Task?.IsCompletedSuccessfully ?? false
+							? "上传完成"
+							: transferTask.Task?.IsCompleted ?? false
+							? "上传失败"
+							: $"上传中 {transferTask.Progress:0.00%}"
+						);
+					}
+					else
+					{
+						item.SubItems.Add(
+							transferTask.Task?.IsCompletedSuccessfully ?? false
+							? "下载完成"
+							: transferTask.Task?.IsCompleted ?? false
+							? "下载失败"
+							: $"下载中 {transferTask.Progress:0.00%}"
+						);
+					}
+
+					// 向列表视图中添加该项
+					lstTransfer.Items.Add(item);
+
+					// 因为刷新了所有列表项，所以要重新选中原来选中的项
+					item.Selected = selectedIndexes.Contains(item.Index);
+				}
+				// 因为刷新了所有列表项，所以要重新设置滚动状态
+				if (scrollPos >= 0 && scrollPos < lstTransfer.Items.Count)
+				{
+					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
+					lstTransfer.EnsureVisible(scrollPos);
+					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
+					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
+					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
+					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
+					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
+					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
+					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
+					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
+					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
+					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
+					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
+					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
+					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
+					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
+					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
+					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
+					lstTransfer.TopItem = lstTransfer.Items[scrollPos];
+				}
+			}
+			finally
+			{
+				lstTransfer.EndUpdate();
 			}
 		}
 
@@ -275,19 +324,30 @@ namespace FtpClient
 			// 在传输列表中记录传输任务
 			TransferTask transferTask = new()
 			{
-				FileName = fileName,
+				FileName = Path.GetFileName(remoteFile),
 				IsUpload = true,
 			};
-			transferTasks.Add(transferTask);
+			service.transferTasks.Add(transferTask);
 			RefreshTransferList();
 
 			LogStatus($"开始上传 {fileName}");
 
-			Task task = service.UploadFile(localFile, remoteFile);
+			Task task = service.UploadFile(localFile, remoteFile, transferTask);
 			transferTask.Task = task;
-			await task;
+			try
+			{
+				await task;
 
-			LogStatus($"{fileName} 上传完成");
+				LogStatus($"{fileName} 上传完成");
+
+				RefreshDirList();
+			}
+			catch (Exception ex)
+			{
+				LogError(ex.Message);
+
+				LogStatus($"{fileName} 上传失败");
+			}
 
 			RefreshTransferList();
 		}
@@ -299,19 +359,30 @@ namespace FtpClient
 			// 在传输列表中记录传输任务
 			TransferTask transferTask = new()
 			{
-				FileName = fileName,
+				FileName = Path.GetFileName(localFile),
 				IsUpload = false,
 			};
-			transferTasks.Add(transferTask);
+			service.transferTasks.Add(transferTask);
 			RefreshTransferList();
 
 			LogStatus($"开始下载 {fileName}");
 
-			Task task = service.DownloadFile($"{service.WorkDir}{fileName}", localFile);
+			Task task = service.DownloadFile($"{service.WorkDir}{fileName}", localFile, transferTask);
 			transferTask.Task = task;
-			await task;
+			try
+			{
+				await task;
 
-			LogStatus($"{fileName} 下载完成");
+				LogStatus($"{fileName} 下载完成");
+
+				RefreshDirList();
+			}
+			catch (Exception ex)
+			{
+				LogError(ex.Message);
+
+				LogStatus($"{fileName} 下载失败");
+			}
 
 			RefreshTransferList();
 		}
@@ -462,6 +533,8 @@ namespace FtpClient
 				};
 				if (dialog.ShowDialog() == DialogResult.OK)
 				{
+					List<Task> tasks = new();
+
 					string[] localFiles = dialog.FileNames;
 					foreach (string localFile in localFiles)
 					{
@@ -475,15 +548,19 @@ namespace FtpClient
 							}
 						}
 
-						await UploadFile(localFile, targetFile);
-
-						RefreshDirList();
+						// 添加异步任务
+						tasks.Add(UploadFile(localFile, targetFile));
 					}
+
+					// 同时开始上传
+					await Task.WhenAll(tasks);
 				}
 			}
 			catch (Exception ex)
 			{
 				LogError(ex.Message);
+
+				RefreshTransferList();
 			}
 		}
 
@@ -491,6 +568,8 @@ namespace FtpClient
 		{
 			try
 			{
+				List<Task> tasks = new();
+
 				foreach (ListViewItem item in lstWorkDir.SelectedItems)
 				{
 					string fileName = item.Text;
@@ -504,14 +583,18 @@ namespace FtpClient
 						targetLocalFile = newLocalFile;
 					}
 
-					await DownloadFile($"{service.WorkDir}{fileName}", targetLocalFile);
-
-					RefreshDirList();
+					// 添加异步任务
+					tasks.Add(DownloadFile($"{service.WorkDir}{fileName}", targetLocalFile));
 				}
+
+				// 同时开始下载
+				await Task.WhenAll(tasks);
 			}
 			catch (Exception ex)
 			{
 				LogError(ex.Message);
+
+				RefreshTransferList();
 			}
 		}
 
@@ -545,26 +628,37 @@ namespace FtpClient
 					return;
 				}
 
-				foreach (ListViewItem item in lstWorkDir.SelectedItems)
+				try
 				{
-					string name = item.Text;
-					string path = $"{service.WorkDir}{name}";
-					// 根据项目是文件还是目录，使用不同的删除方式
-					if (item.Name == "dir")
+					foreach (ListViewItem item in lstWorkDir.SelectedItems)
 					{
-						path += "/";
+						string name = item.Text;
+						string path = $"{service.WorkDir}{name}";
+						// 根据项目是文件还是目录，使用不同的删除方式
+						if (item.Name == "dir")
+						{
+							path += "/";
 
-						DeleteDirectoryWithAll(path);
+							DeleteDirectoryWithAll(path);
 
-						LogStatus($"目录 \"{path}\" 删除完成");
+							LogStatus($"目录 \"{path}\" 删除完成");
+						}
+						else
+						{
+							service.DeleteFile(path);
+
+							LogStatus($"删除文件 \"{path}\"");
+						}
 					}
-					else
-					{
-						service.DeleteFile(path);
+				}
+				catch (Exception ex)
+				{
+					LogError(ex.Message);
 
-						LogStatus($"删除文件 \"{path}\"");
-					}
-
+					LogStatus("删除失败");
+				}
+				finally
+				{
 					RefreshDirList();
 				}
 			}
@@ -577,6 +671,16 @@ namespace FtpClient
 		private void tsiStatus_Clear_Click(object sender, EventArgs e)
 		{
 			txtStatus.Clear();
+		}
+
+		private void btnMkDir_Click(object sender, EventArgs e)
+		{
+			
+		}
+
+		private void tmrRefreshTransfer_Tick(object sender, EventArgs e)
+		{
+			RefreshTransferList();
 		}
 	}
 }

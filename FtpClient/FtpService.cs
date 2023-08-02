@@ -23,6 +23,18 @@ namespace MyFtp3
 		public DirItemInfo() { }
 	}
 
+	// 文件传输任务类
+	public class TransferTask
+	{
+		public Task? Task = null;
+		public string FileName = string.Empty;
+		public bool IsUpload = true; // true：上传，false：下载
+		public bool HasCompleted = false;
+		public double Progress = 0;
+
+		public TransferTask() { }
+	}
+
 	// FTP 服务
 	public class FtpService
 	{
@@ -32,13 +44,18 @@ namespace MyFtp3
 
 		public string WorkDir = "/"; // 当前工作路径
 
-		// 用事件的方式向用户界面输出应答
-		public delegate void LogDelegate(string? statusStr);
-		public event LogDelegate LogResponse;
+		const int bufferSize = 1048576;
+
+		public readonly List<TransferTask> transferTasks = new();
+
+		// 用事件的方式向用户界面输出应答、通知更新传输列表
+		public event Action<string?> GotResponse;
+		public event Action UpdatedTransferTasks;
 
 		public FtpService()
 		{
-			LogResponse += _ => { };
+			GotResponse += _ => { };
+			UpdatedTransferTasks += () => { };
 		}
 
 		public void Connect()
@@ -53,7 +70,7 @@ namespace MyFtp3
 
 			using (FtpWebResponse response = (FtpWebResponse)request.GetResponse())
 			{
-				LogResponse(response.StatusDescription);
+				GotResponse(response.StatusDescription);
 			}
 
 			WorkDir = "/";
@@ -181,7 +198,7 @@ namespace MyFtp3
 		}
 
 		// 异步上传文件
-		public async Task UploadFile(string localFile, string remoteFile)
+		public async Task UploadFile(string localFile, string remoteFile, TransferTask transferTask)
 		{
 			FtpWebRequest request = (FtpWebRequest)WebRequest.Create($"ftp://{Host}{remoteFile}");
 
@@ -195,15 +212,28 @@ namespace MyFtp3
 			using (FileStream fileStream = File.Open(localFile, FileMode.Open, FileAccess.Read))
 			{
 				using Stream requestStream = request.GetRequestStream();
-				await fileStream.CopyToAsync(requestStream);
+				//await fileStream.CopyToAsync(requestStream);
+
+				long fileSize = fileStream.Length;
+				byte[] buffer = new byte[bufferSize];
+				long bytesSent = 0;
+				int bytesToSend = await fileStream.ReadAsync(buffer, 0, bufferSize);
+				while (bytesToSend != 0)
+				{
+					await requestStream.WriteAsync(buffer.AsMemory(0, bytesToSend));
+					bytesSent += bytesToSend;
+					transferTask.Progress = (double)bytesSent / fileSize;
+					//UpdatedTransferTasks();
+					bytesToSend = await fileStream.ReadAsync(buffer, 0, bufferSize);
+				}
 			}
 
 			// 上传完成
 			using FtpWebResponse response = (FtpWebResponse)request.GetResponse();
-			LogResponse(response.StatusDescription);
+			GotResponse(response.StatusDescription);
 		}
 
-		public async Task DownloadFile(string remoteFile, string localFile)
+		public async Task DownloadFile(string remoteFile, string localFile, TransferTask transferTask)
 		{
 			FtpWebRequest request = (FtpWebRequest)WebRequest.Create($"ftp://{Host}{remoteFile}");
 
@@ -218,10 +248,23 @@ namespace MyFtp3
 			// 用文件流将服务端文件下载到本地
 			using Stream fileStream = File.Open(localFile, FileMode.OpenOrCreate, FileAccess.Write);
 			using Stream responseStream = response.GetResponseStream();
-			await responseStream.CopyToAsync(fileStream);
+			//await responseStream.CopyToAsync(fileStream);
+
+			long fileSize = GetFileSize(remoteFile);
+			byte[] buffer = new byte[bufferSize];
+			long bytesRead = 0;
+			int bytesToRead = await responseStream.ReadAsync(buffer, 0, bufferSize);
+			while (bytesToRead != 0)
+			{
+				await fileStream.WriteAsync(buffer.AsMemory(0, bytesToRead));
+				bytesRead += bytesToRead;
+				transferTask.Progress = (double)bytesRead / fileSize;
+				//UpdatedTransferTasks();
+				bytesToRead = await responseStream.ReadAsync(buffer, 0, bufferSize);
+			}
 
 			// 下载完成
-			LogResponse(response.StatusDescription);
+			GotResponse(response.StatusDescription);
 		}
 
 		public void DeleteFile(string file)
@@ -236,7 +279,7 @@ namespace MyFtp3
 
 			using FtpWebResponse response = (FtpWebResponse)request.GetResponse();
 			
-			LogResponse(response.StatusDescription);
+			GotResponse(response.StatusDescription);
 		}
 
 		public void RemoveDirectory(string dir)
@@ -251,7 +294,7 @@ namespace MyFtp3
 
 			using FtpWebResponse response = (FtpWebResponse)request.GetResponse();
 
-			LogResponse(response.StatusDescription);
+			GotResponse(response.StatusDescription);
 		}
 	}
 }
