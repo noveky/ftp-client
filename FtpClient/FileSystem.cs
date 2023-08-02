@@ -10,21 +10,24 @@ namespace FtpClient
 	{
 		public static string GetSizeStr(long size)
 		{
-			if (size < 1024)
+			string[] units = { "B", "KB", "MB", "GB", "TB" };
+			int unitIndex = 0;
+			double fileSize = size;
+
+			while (fileSize >= 1024 && unitIndex < units.Length - 1)
 			{
-				return $"{size} B";
+				fileSize /= 1024;
+				unitIndex++;
 			}
-			else if (size < 1048576)
+
+			// 在整数部分少于3位时，只保留3位有效数字
+			if (fileSize >= 100)
 			{
-				return $"{(long)Math.Round((double)size / 1024)} KB";
-			}
-			else if (size < 1073741824)
-			{
-				return $"{(long)Math.Round((double)size / 1048576)} MB";
+				return $"{fileSize:0} {units[unitIndex]}";
 			}
 			else
 			{
-				return $"{(long)Math.Round((double)size / 1073741824)} GB";
+				return $"{fileSize:G3} {units[unitIndex]}";
 			}
 		}
 

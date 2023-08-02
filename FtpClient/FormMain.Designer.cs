@@ -57,10 +57,9 @@
 			this.lstTransfer = new System.Windows.Forms.ListView();
 			this.columnHeader4 = new System.Windows.Forms.ColumnHeader();
 			this.columnHeader5 = new System.Windows.Forms.ColumnHeader();
-			this.cmsTransferList = new System.Windows.Forms.ContextMenuStrip(this.components);
-			this.tsiTransferList_ClearCompleted = new System.Windows.Forms.ToolStripMenuItem();
 			this.label3 = new System.Windows.Forms.Label();
 			this.panel1 = new System.Windows.Forms.Panel();
+			this.btnOpenLocalPath = new System.Windows.Forms.Button();
 			this.btnMkDir = new System.Windows.Forms.Button();
 			this.btnUpload = new System.Windows.Forms.Button();
 			this.txtLocalPath = new System.Windows.Forms.TextBox();
@@ -69,6 +68,15 @@
 			this.txtStatus = new System.Windows.Forms.RichTextBox();
 			this.cmsStatus = new System.Windows.Forms.ContextMenuStrip(this.components);
 			this.tsiStatus_Clear = new System.Windows.Forms.ToolStripMenuItem();
+			this.cmsTransferList = new System.Windows.Forms.ContextMenuStrip(this.components);
+			this.tsiTransferList_Pause = new System.Windows.Forms.ToolStripMenuItem();
+			this.tsiTransferList_Unpause = new System.Windows.Forms.ToolStripMenuItem();
+			this.tsiTransferList_Retry = new System.Windows.Forms.ToolStripMenuItem();
+			this.tsiTransferList_Cancel = new System.Windows.Forms.ToolStripMenuItem();
+			this.tsiTransferList_PauseAll = new System.Windows.Forms.ToolStripMenuItem();
+			this.tsiTransferList_UnpauseAll = new System.Windows.Forms.ToolStripMenuItem();
+			this.tsiTransferList_CancelAll = new System.Windows.Forms.ToolStripMenuItem();
+			this.tsiTransferList_RemoveInactive = new System.Windows.Forms.ToolStripMenuItem();
 			this.cmsDirList = new System.Windows.Forms.ContextMenuStrip(this.components);
 			this.tsiDirList_Download = new System.Windows.Forms.ToolStripMenuItem();
 			this.tsiDirList_Rename = new System.Windows.Forms.ToolStripMenuItem();
@@ -84,10 +92,10 @@
 			this.tableLayoutPanel13.SuspendLayout();
 			this.panel2.SuspendLayout();
 			this.panel3.SuspendLayout();
-			this.cmsTransferList.SuspendLayout();
 			this.panel1.SuspendLayout();
 			this.groupBox1.SuspendLayout();
 			this.cmsStatus.SuspendLayout();
+			this.cmsTransferList.SuspendLayout();
 			this.cmsDirList.SuspendLayout();
 			this.SuspendLayout();
 			// 
@@ -357,8 +365,8 @@
 			this.lstWorkDir.TabIndex = 1;
 			this.lstWorkDir.UseCompatibleStateImageBehavior = false;
 			this.lstWorkDir.View = System.Windows.Forms.View.Details;
-			this.lstWorkDir.MouseClick += new System.Windows.Forms.MouseEventHandler(this.lstWorkDir_MouseClick);
 			this.lstWorkDir.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.lstWorkDir_MouseDoubleClick);
+			this.lstWorkDir.MouseUp += new System.Windows.Forms.MouseEventHandler(this.lstWorkDir_MouseUp);
 			// 
 			// columnHeader1
 			// 
@@ -401,7 +409,6 @@
 			this.lstTransfer.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeader4,
             this.columnHeader5});
-			this.lstTransfer.ContextMenuStrip = this.cmsTransferList;
 			this.lstTransfer.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.lstTransfer.FullRowSelect = true;
 			this.lstTransfer.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
@@ -411,6 +418,7 @@
 			this.lstTransfer.TabIndex = 2;
 			this.lstTransfer.UseCompatibleStateImageBehavior = false;
 			this.lstTransfer.View = System.Windows.Forms.View.Details;
+			this.lstTransfer.MouseUp += new System.Windows.Forms.MouseEventHandler(this.lstTransfer_MouseUp);
 			// 
 			// columnHeader4
 			// 
@@ -421,20 +429,6 @@
 			// 
 			this.columnHeader5.Text = "状态";
 			this.columnHeader5.Width = 100;
-			// 
-			// cmsTransferList
-			// 
-			this.cmsTransferList.DropShadowEnabled = false;
-			this.cmsTransferList.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.tsiTransferList_ClearCompleted});
-			this.cmsTransferList.Name = "cmsTransferList";
-			this.cmsTransferList.Size = new System.Drawing.Size(161, 26);
-			// 
-			// tsiTransferList_ClearCompleted
-			// 
-			this.tsiTransferList_ClearCompleted.Name = "tsiTransferList_ClearCompleted";
-			this.tsiTransferList_ClearCompleted.Size = new System.Drawing.Size(160, 22);
-			this.tsiTransferList_ClearCompleted.Text = "清除已结束任务";
 			// 
 			// label3
 			// 
@@ -448,6 +442,7 @@
 			// 
 			// panel1
 			// 
+			this.panel1.Controls.Add(this.btnOpenLocalPath);
 			this.panel1.Controls.Add(this.btnMkDir);
 			this.panel1.Controls.Add(this.btnUpload);
 			this.panel1.Controls.Add(this.txtLocalPath);
@@ -457,6 +452,16 @@
 			this.panel1.Name = "panel1";
 			this.panel1.Size = new System.Drawing.Size(291, 89);
 			this.panel1.TabIndex = 1;
+			// 
+			// btnOpenLocalPath
+			// 
+			this.btnOpenLocalPath.Location = new System.Drawing.Point(237, 60);
+			this.btnOpenLocalPath.Name = "btnOpenLocalPath";
+			this.btnOpenLocalPath.Size = new System.Drawing.Size(54, 23);
+			this.btnOpenLocalPath.TabIndex = 10;
+			this.btnOpenLocalPath.Text = "打开";
+			this.btnOpenLocalPath.UseVisualStyleBackColor = true;
+			this.btnOpenLocalPath.Click += new System.EventHandler(this.btnOpenLocalPath_Click);
 			// 
 			// btnMkDir
 			// 
@@ -484,9 +489,10 @@
 			this.txtLocalPath.Location = new System.Drawing.Point(0, 60);
 			this.txtLocalPath.Name = "txtLocalPath";
 			this.txtLocalPath.PlaceholderText = "未设置";
-			this.txtLocalPath.Size = new System.Drawing.Size(291, 23);
+			this.txtLocalPath.Size = new System.Drawing.Size(231, 23);
 			this.txtLocalPath.TabIndex = 2;
 			this.txtLocalPath.Text = "D:\\ftp-test\\client\\";
+			this.txtLocalPath.DoubleClick += new System.EventHandler(this.txtLocalPath_DoubleClick);
 			this.txtLocalPath.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtLocalPath_KeyDown);
 			this.txtLocalPath.Leave += new System.EventHandler(this.txtLocalPath_Leave);
 			// 
@@ -538,6 +544,73 @@
 			this.tsiStatus_Clear.Size = new System.Drawing.Size(100, 22);
 			this.tsiStatus_Clear.Text = "清空";
 			this.tsiStatus_Clear.Click += new System.EventHandler(this.tsiStatus_Clear_Click);
+			// 
+			// cmsTransferList
+			// 
+			this.cmsTransferList.DropShadowEnabled = false;
+			this.cmsTransferList.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.tsiTransferList_Pause,
+            this.tsiTransferList_Unpause,
+            this.tsiTransferList_Retry,
+            this.tsiTransferList_Cancel,
+            this.tsiTransferList_PauseAll,
+            this.tsiTransferList_UnpauseAll,
+            this.tsiTransferList_CancelAll,
+            this.tsiTransferList_RemoveInactive});
+			this.cmsTransferList.Name = "cmsTransferList";
+			this.cmsTransferList.Size = new System.Drawing.Size(181, 202);
+			// 
+			// tsiTransferList_Pause
+			// 
+			this.tsiTransferList_Pause.Name = "tsiTransferList_Pause";
+			this.tsiTransferList_Pause.Size = new System.Drawing.Size(180, 22);
+			this.tsiTransferList_Pause.Text = "暂停";
+			this.tsiTransferList_Pause.Click += new System.EventHandler(this.tsiTransferList_Pause_Click);
+			// 
+			// tsiTransferList_Unpause
+			// 
+			this.tsiTransferList_Unpause.Name = "tsiTransferList_Unpause";
+			this.tsiTransferList_Unpause.Size = new System.Drawing.Size(180, 22);
+			this.tsiTransferList_Unpause.Text = "继续";
+			this.tsiTransferList_Unpause.Click += new System.EventHandler(this.tsiTransferList_Unpause_Click);
+			// 
+			// tsiTransferList_Retry
+			// 
+			this.tsiTransferList_Retry.Name = "tsiTransferList_Retry";
+			this.tsiTransferList_Retry.Size = new System.Drawing.Size(180, 22);
+			this.tsiTransferList_Retry.Text = "重试";
+			this.tsiTransferList_Retry.Click += new System.EventHandler(this.tsiTransferList_Retry_Click);
+			// 
+			// tsiTransferList_Cancel
+			// 
+			this.tsiTransferList_Cancel.Name = "tsiTransferList_Cancel";
+			this.tsiTransferList_Cancel.Size = new System.Drawing.Size(180, 22);
+			this.tsiTransferList_Cancel.Text = "取消";
+			this.tsiTransferList_Cancel.Click += new System.EventHandler(this.tsiTransferList_Cancel_Click);
+			// 
+			// tsiTransferList_PauseAll
+			// 
+			this.tsiTransferList_PauseAll.Name = "tsiTransferList_PauseAll";
+			this.tsiTransferList_PauseAll.Size = new System.Drawing.Size(180, 22);
+			this.tsiTransferList_PauseAll.Text = "全部暂停";
+			// 
+			// tsiTransferList_UnpauseAll
+			// 
+			this.tsiTransferList_UnpauseAll.Name = "tsiTransferList_UnpauseAll";
+			this.tsiTransferList_UnpauseAll.Size = new System.Drawing.Size(180, 22);
+			this.tsiTransferList_UnpauseAll.Text = "全部继续";
+			// 
+			// tsiTransferList_CancelAll
+			// 
+			this.tsiTransferList_CancelAll.Name = "tsiTransferList_CancelAll";
+			this.tsiTransferList_CancelAll.Size = new System.Drawing.Size(180, 22);
+			this.tsiTransferList_CancelAll.Text = "全部取消";
+			// 
+			// tsiTransferList_RemoveInactive
+			// 
+			this.tsiTransferList_RemoveInactive.Name = "tsiTransferList_RemoveInactive";
+			this.tsiTransferList_RemoveInactive.Size = new System.Drawing.Size(180, 22);
+			this.tsiTransferList_RemoveInactive.Text = "清除非活跃任务";
 			// 
 			// cmsDirList
 			// 
@@ -599,11 +672,11 @@
 			this.tableLayoutPanel13.PerformLayout();
 			this.panel2.ResumeLayout(false);
 			this.panel3.ResumeLayout(false);
-			this.cmsTransferList.ResumeLayout(false);
 			this.panel1.ResumeLayout(false);
 			this.panel1.PerformLayout();
 			this.groupBox1.ResumeLayout(false);
 			this.cmsStatus.ResumeLayout(false);
+			this.cmsTransferList.ResumeLayout(false);
 			this.cmsDirList.ResumeLayout(false);
 			this.ResumeLayout(false);
 
@@ -654,7 +727,15 @@
 		private ColumnHeader columnHeader4;
 		private ColumnHeader columnHeader5;
 		private ContextMenuStrip cmsTransferList;
-		private ToolStripMenuItem tsiTransferList_ClearCompleted;
+		private ToolStripMenuItem tsiTransferList_RemoveInactive;
 		private System.Windows.Forms.Timer tmrRefreshTransfer;
+		private ToolStripMenuItem tsiTransferList_Pause;
+		private ToolStripMenuItem tsiTransferList_Unpause;
+		private ToolStripMenuItem tsiTransferList_PauseAll;
+		private ToolStripMenuItem tsiTransferList_UnpauseAll;
+		private ToolStripMenuItem tsiTransferList_Retry;
+		private ToolStripMenuItem tsiTransferList_Cancel;
+		private ToolStripMenuItem tsiTransferList_CancelAll;
+		private Button btnOpenLocalPath;
 	}
 }

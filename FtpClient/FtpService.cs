@@ -10,6 +10,7 @@ using Microsoft.VisualBasic.Logging;
 using System.Xml.Linq;
 using System.Runtime.CompilerServices;
 using FtpClient;
+using System.Runtime.InteropServices;
 
 namespace MyFtp3
 {
@@ -27,49 +28,83 @@ namespace MyFtp3
 	// 文件传输任务类
 	public class TransferTask
 	{
-		public Task? Task = null;
+		public readonly string Id;
+		public Task? Task = null; // 传输线程
 		public string FileName = string.Empty;
 		public string LocalFile = string.Empty;
 		public string RemoteFile = string.Empty;
 		public bool IsUpload = true; // true：上传，false：下载
 		public double Progress = 0;
-		public bool Paused = false;
+
+		private bool paused = false;
+		private bool canceled = false;
 
 		// 方便使用的get属性
-		public bool IsCompleted => Task?.IsCompleted ?? false;
-		public bool IsRunning => !IsCompleted;
+		public bool IsRunning => !Task?.IsCompleted ?? false;
+		public bool IsPaused => !canceled && paused;
+		public bool IsCanceled => canceled;
 		public bool IsSucceeded => Task?.IsCompletedSuccessfully ?? false;
 		public bool IsFaulted => Task?.IsFaulted ?? false;
+		public bool CanBePaused => IsRunning;
+		public bool CanBeUnpaused => IsPaused;
+		public bool CanBeRetried => IsFaulted;
+		public bool CanBeCanceled => !IsSucceeded;
 
-		public TransferTask() { }
+		public TransferTask()
+		{
+			Id = Guid.NewGuid().ToString();
+		}
+
+		public void Pause()
+		{
+			if (!CanBePaused) return;
+
+			paused = true;
+			Task = null;
+		}
+
+		public void Unpause()
+		{
+			if (!CanBeUnpaused) return;
+
+			paused = false;
+		}
+
+		public void Retry()
+		{
+			if (!CanBeRetried) return;
+
+			paused = false;
+		}
+
+		public void Cancel()
+		{
+			if (!CanBeCanceled) return;
+
+			canceled = true;
+			Task = null;
+		}
 	}
 
 	// FTP 服务
-	public class FtpService
+	public static class FtpService
 	{
-		public string Host = ""; // 服务器IP地址
-		public string User = ""; // 登录用户名，为空则匿名
-		public string Pass = ""; // 登录密码
+		public static string Host = ""; // 服务器IP地址
+		public static string User = ""; // 登录用户名，为空则匿名
+		public static string Pass = ""; // 登录密码
 
-		public string WorkDir = "/"; // 当前工作路径
+		public static string WorkDir = "/"; // 当前工作路径
 
 		const int bufferSize = 1048576;
 
-		public readonly List<TransferTask> transferTasks = new();
+		public static readonly List<TransferTask> transferTasks = new();
 
 		// 用事件的方式向用户界面输出应答、通知更新传输列表
-		public event Action<string?> GotResponse;
-		public event Action<string?> LogStatus;
-		public event Action UpdatedTransferTasks;
+		public static event Action<string?>? GotResponse;
+		public static event Action<string?>? LogInfo;
+		public static event Action? UpdatedTransferTasks;
 
-		public FtpService()
-		{
-			GotResponse += _ => { };
-			LogStatus += _ => { };
-			UpdatedTransferTasks += () => { };
-		}
-
-		public void Connect()
+		public static void Connect()
 		{
 			FtpWebRequest request = (FtpWebRequest)WebRequest.Create($"ftp://{Host}");
 
@@ -88,13 +123,13 @@ namespace MyFtp3
 		}
 
 		// 列出工作路径中所有项的详细信息
-		public DirItemInfo[] ListWorkDir()
+		public static DirItemInfo[] ListWorkDir()
 		{
 			return ListDir(WorkDir);
 		}
 
 		// 列出指定路径中所有项的详细信息
-		public DirItemInfo[] ListDir(string dir)
+		public static DirItemInfo[] ListDir(string dir)
 		{
 			FtpWebRequest request = (FtpWebRequest)WebRequest.Create($"ftp://{Host}{dir}");
 
@@ -133,13 +168,10 @@ namespace MyFtp3
 				}
 				catch (Exception)
 				{
-					try
+					if (DirectoryExists($"{path}/"))
 					{
-						ListDir($"{path}/");
-
 						isDirectory = true;
 					}
-					catch { }
 				}
 
 				infos[i] = new()
@@ -154,7 +186,7 @@ namespace MyFtp3
 			return infos;
 		}
 
-		public DateTime GetFileLastModified(string file)
+		public static DateTime GetFileLastModified(string file)
 		{
 			FtpWebRequest request = (FtpWebRequest)WebRequest.Create($"ftp://{Host}{file}");
 
@@ -174,7 +206,7 @@ namespace MyFtp3
 			return lastModified;
 		}
 
-		public long GetFileSize(string file)
+		public static long GetFileSize(string file)
 		{
 			FtpWebRequest request = (FtpWebRequest)WebRequest.Create($"ftp://{Host}{file}");
 
@@ -194,7 +226,7 @@ namespace MyFtp3
 			return fileSize;
 		}
 
-		public bool FileExists(string file)
+		public static bool FileExists(string file)
 		{
 			FtpWebRequest request = (FtpWebRequest)WebRequest.Create($"ftp://{Host}{file}");
 
@@ -202,7 +234,29 @@ namespace MyFtp3
 			{
 				request.Credentials = request.Credentials = new NetworkCredential(User, Pass);
 			}
-			request.Method = WebRequestMethods.Ftp.GetFileSize;
+			request.Method = WebRequestMethods.Ftp.GetDateTimestamp;
+
+			try
+			{
+				request.GetResponse();
+			}
+			catch
+			{
+				return false;
+			}
+
+			return true;
+		}
+
+		public static bool DirectoryExists(string dir)
+		{
+			FtpWebRequest request = (FtpWebRequest)WebRequest.Create($"ftp://{Host}{dir}");
+
+			if (User != string.Empty)
+			{
+				request.Credentials = request.Credentials = new NetworkCredential(User, Pass);
+			}
+			request.Method = WebRequestMethods.Ftp.ListDirectory;
 
 			try
 			{
@@ -217,7 +271,7 @@ namespace MyFtp3
 		}
 
 		// 异步上传文件
-		public async Task UploadFile(string localFile, string remoteFile, TransferTask transferTask)
+		public static async Task UploadFile(string localFile, string remoteFile, TransferTask transferTask, bool allowBreakpointResume)
 		{
 			FtpWebRequest request = (FtpWebRequest)WebRequest.Create($"ftp://{Host}{remoteFile}");
 
@@ -227,33 +281,42 @@ namespace MyFtp3
 			}
 			request.Method = WebRequestMethods.Ftp.UploadFile;
 
-			// 用文件流将本地文件上传到服务器
 			using (FileStream fileStream = File.Open(localFile, FileMode.Open, FileAccess.Read))
 			{
 				long fileSize = fileStream.Length;
-				long serverFileSize = FileExists(remoteFile) ? GetFileSize(remoteFile) : 0;
-				if (serverFileSize > 0)
+				long startPosition = 0;
+				if (allowBreakpointResume)
 				{
-					// 断点续传
-					request.ContentOffset = serverFileSize;
-					fileStream.Seek(serverFileSize, SeekOrigin.Begin);
-					request.ContentLength = fileStream.Length - serverFileSize;
+					startPosition = FileExists(remoteFile) ? GetFileSize(remoteFile) : 0;
+					if (startPosition > 0)
+					{
+						// 断点续传
+						request.ContentOffset = startPosition;
+						fileStream.Seek(startPosition, SeekOrigin.Begin);
 
-					LogStatus($"{Path.GetFileName(remoteFile)} 断点续传 {FileSystem.GetSizeStr(serverFileSize)} / {FileSystem.GetSizeStr(fileSize)}");
+						LogInfo($"{Path.GetFileName(remoteFile)} 断点续传 {FileSystem.GetSizeStr(startPosition)} / {FileSystem.GetSizeStr(fileSize)}");
+					}
 				}
 
 				using Stream requestStream = request.GetRequestStream();
 				//await fileStream.CopyToAsync(requestStream);
 
+				// 分块上传
 				byte[] buffer = new byte[bufferSize];
-				long bytesSent = serverFileSize; // 断点续传按断点之前都已传输完成算
+				long bytesSent = startPosition; // 断点续传按断点之前都已传输完成算
 				int bytesToSend = await fileStream.ReadAsync(buffer, 0, bufferSize);
 				while (bytesToSend != 0)
 				{
 					await requestStream.WriteAsync(buffer.AsMemory(0, bytesToSend));
+
 					bytesSent += bytesToSend;
 					transferTask.Progress = (double)bytesSent / fileSize;
-					//UpdatedTransferTasks();
+					if (transferTask.IsPaused || transferTask.IsCanceled)
+					{
+						request.Abort();
+						return;
+					}
+
 					bytesToSend = await fileStream.ReadAsync(buffer, 0, bufferSize);
 				}
 			}
@@ -263,7 +326,7 @@ namespace MyFtp3
 			GotResponse(response.StatusDescription);
 		}
 
-		public async Task DownloadFile(string remoteFile, string localFile, TransferTask transferTask)
+		public static async Task DownloadFile(string remoteFile, string localFile, TransferTask transferTask, bool allowBreakpointResume)
 		{
 			FtpWebRequest request = (FtpWebRequest)WebRequest.Create($"ftp://{Host}{remoteFile}");
 
@@ -273,23 +336,43 @@ namespace MyFtp3
 			}
 			request.Method = WebRequestMethods.Ftp.DownloadFile;
 
-			using FtpWebResponse response = (FtpWebResponse)request.GetResponse();
-
-			// 用文件流将服务端文件下载到本地
 			using Stream fileStream = File.Open(localFile, FileMode.OpenOrCreate, FileAccess.Write);
+
+			long fileSize = GetFileSize(remoteFile);
+			long startPosition = 0;
+			if (allowBreakpointResume)
+			{
+				startPosition = File.Exists(localFile) ? new FileInfo(localFile).Length : 0;
+				if (startPosition > 0)
+				{
+					// 断点续传
+					request.ContentOffset = startPosition;
+					fileStream.Seek(startPosition, SeekOrigin.Begin);
+
+					LogInfo($"{Path.GetFileName(remoteFile)} 断点续传 {FileSystem.GetSizeStr(startPosition)} / {FileSystem.GetSizeStr(fileSize)}");
+				}
+			}
+
+			using FtpWebResponse response = (FtpWebResponse)request.GetResponse();
 			using Stream responseStream = response.GetResponseStream();
 			//await responseStream.CopyToAsync(fileStream);
 
-			long fileSize = GetFileSize(remoteFile);
+			// 分块下载
 			byte[] buffer = new byte[bufferSize];
-			long bytesRead = 0;
+			long bytesRead = startPosition; // 断点续传按断点之前都已传输完成算
 			int bytesToRead = await responseStream.ReadAsync(buffer, 0, bufferSize);
 			while (bytesToRead != 0)
 			{
 				await fileStream.WriteAsync(buffer.AsMemory(0, bytesToRead));
+
 				bytesRead += bytesToRead;
 				transferTask.Progress = (double)bytesRead / fileSize;
-				//UpdatedTransferTasks();
+				if (transferTask.IsPaused || transferTask.IsCanceled)
+				{
+					request.Abort();
+					return;
+				}
+
 				bytesToRead = await responseStream.ReadAsync(buffer, 0, bufferSize);
 			}
 
@@ -297,7 +380,7 @@ namespace MyFtp3
 			GotResponse(response.StatusDescription);
 		}
 
-		public void DeleteFile(string file)
+		public static void DeleteFile(string file)
 		{
 			FtpWebRequest request = (FtpWebRequest)WebRequest.Create($"ftp://{Host}{file}");
 
@@ -312,7 +395,7 @@ namespace MyFtp3
 			GotResponse(response.StatusDescription);
 		}
 
-		public void RemoveDirectory(string dir)
+		public static void RemoveDirectory(string dir)
 		{
 			FtpWebRequest request = (FtpWebRequest)WebRequest.Create($"ftp://{Host}{dir}");
 
