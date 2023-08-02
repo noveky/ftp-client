@@ -13,6 +13,7 @@ using MyFtp3;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Tab;
 using System.Diagnostics;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
 
 namespace FtpClient
 {
@@ -347,6 +348,15 @@ namespace FtpClient
 
 		async Task DownloadFile(string remoteFile, string localFile, TransferTask? transferTask = null)
 		{
+			if (File.Exists(localFile))
+			{
+				string newLocalFile = FileSystem.GetUniqueNameLocalFile(localFile);
+
+				LogStatus($"\"{localFile}\" 已存在，下载到新文件名 {Path.GetFileName(newLocalFile)}");
+
+				localFile = newLocalFile;
+			}
+
 			string fileName = Path.GetFileName(localFile);
 
 			bool allowBreakpointResume = transferTask != null;
@@ -425,10 +435,14 @@ namespace FtpClient
 			{
 				if (item != null)
 				{
-					// 若该项是目录，则转到该目录下
+					// 若该项是目录，则转到该目录下；若该项是文件，则下载该文件
 					if (item.Name == "dir")
 					{
 						ChangeDir(FtpService.WorkDir.TrimEnd('/') + "/" + item.Text + "/");
+					}
+					else
+					{
+						DownloadDirItem(item);
 					}
 				}
 			}
@@ -544,7 +558,14 @@ namespace FtpClient
 			}
 		}
 
-		private async void tsiDirList_Download_Click(object sender, EventArgs e)
+		void DownloadDirItem(ListViewItem item)
+		{
+			string fileName = item.Text;
+			string targetLocalFile = Path.Combine(LocalPath, fileName);
+			Invoke(async () => await DownloadFile($"{FtpService.WorkDir}{fileName}", targetLocalFile));
+		}
+
+		private void tsiDirList_Download_Click(object sender, EventArgs e)
 		{
 			try
 			{
@@ -552,23 +573,8 @@ namespace FtpClient
 
 				foreach (ListViewItem item in lstWorkDir.SelectedItems)
 				{
-					string fileName = item.Text;
-					string targetLocalFile = Path.Combine(LocalPath, fileName);
-					if (File.Exists(targetLocalFile))
-					{
-						string newLocalFile = FileSystem.GetUniqueNameLocalFile(targetLocalFile);
-
-						LogStatus($"\"{targetLocalFile}\" 已存在，下载到新文件名 {Path.GetFileName(newLocalFile)}");
-
-						targetLocalFile = newLocalFile;
-					}
-
-					// 添加异步任务
-					tasks.Add(DownloadFile($"{FtpService.WorkDir}{fileName}", targetLocalFile));
+					DownloadDirItem(item);
 				}
-
-				// 同时开始下载
-				await Task.WhenAll(tasks);
 			}
 			catch (Exception ex)
 			{
