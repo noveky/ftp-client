@@ -544,7 +544,7 @@ namespace FtpClient
 						string targetFile = $"{FtpService.WorkDir}{fileName}";
 						if (FtpService.FileExists(targetFile))
 						{
-							if (MessageBox.Show($"\"{targetFile}\" 已存在。是否覆盖？", "确认上传", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) != DialogResult.Yes)
+							if (MessageBox.Show($"\"{targetFile}\" 已存在。确认覆盖？", "上传文件", MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation) != DialogResult.OK)
 							{
 								continue;
 							}
