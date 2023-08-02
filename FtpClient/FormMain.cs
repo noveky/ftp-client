@@ -57,42 +57,42 @@ namespace FtpClient
 			DoubleBuffered = true;
 
 			FtpService.LogResponse += LogResponse;
-			FtpService.LogInfo += LogInfo;
+			FtpService.LogMessage += LogMessage;
 			FtpService.RefreshDirList += RefreshDirList;
 
 			LocalPath = txtLocalPath.Text;
 		}
 
-		void Log(string message)
+		void Log(string text)
 		{
 			if (txtLog.Text.Length != 0)
 			{
 				txtLog.AppendText("\n");
 			}
-			txtLog.AppendText($"[{DateTime.Now:HH:mm:ss}] {message.Trim()}");
+			txtLog.AppendText($"[{DateTime.Now:HH:mm:ss}] {text.Trim()}");
 			txtLog.SelectionStart = txtLog.Text.Length - 1;
 			txtLog.SelectionLength = 0;
 			txtLog.ScrollToCaret();
 		}
 
-		void LogResponse(string? statMsg)
+		void LogResponse(string? responseText)
 		{
-			Log($"应答：{statMsg}");
+			Log($"应答：{responseText}");
 		}
 
-		void LogInfo(string? statMsg)
+		void LogMessage(string? messageText)
 		{
-			Log($"信息：{statMsg}");
+			Log($"消息：{messageText}");
 		}
 
-		void LogStatus(string? statMsg)
+		void LogStatus(string? statusText)
 		{
-			Log($"状态：{statMsg}");
+			Log($"状态：{statusText}");
 		}
 
-		void LogError(string? errMsg)
+		void LogError(string? errorText)
 		{
-			Log($"错误：{errMsg}");
+			Log($"错误：{errorText}");
 		}
 
 		// 更改工作路径

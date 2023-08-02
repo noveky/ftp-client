@@ -102,7 +102,7 @@ namespace FtpClient
 
 		// 用事件的方式向用户界面输出应答、通知更新文件列表
 		public static event Action<string?>? LogResponse;
-		public static event Action<string?>? LogInfo;
+		public static event Action<string?>? LogMessage;
 		public static event Action? RefreshDirList;
 
 		public static void Connect()
@@ -295,7 +295,7 @@ namespace FtpClient
 						request.ContentOffset = startPosition;
 						fileStream.Seek(startPosition, SeekOrigin.Begin);
 
-						LogInfo?.Invoke($"{Path.GetFileName(remoteFile)} 开始断点续传 {FileSystem.GetSizeStr(startPosition)} / {FileSystem.GetSizeStr(fileSize)}");
+						LogMessage?.Invoke($"{Path.GetFileName(remoteFile)} 开始断点续传 {FileSystem.GetSizeStr(startPosition)} / {FileSystem.GetSizeStr(fileSize)}");
 					}
 				}
 
@@ -357,7 +357,7 @@ namespace FtpClient
 					request.ContentOffset = startPosition;
 					fileStream.Seek(startPosition, SeekOrigin.Begin);
 
-					LogInfo?.Invoke($"{Path.GetFileName(remoteFile)} 开始断点续传 {FileSystem.GetSizeStr(startPosition)} / {FileSystem.GetSizeStr(fileSize)}");
+					LogMessage?.Invoke($"{Path.GetFileName(remoteFile)} 开始断点续传 {FileSystem.GetSizeStr(startPosition)} / {FileSystem.GetSizeStr(fileSize)}");
 				}
 			}
 
