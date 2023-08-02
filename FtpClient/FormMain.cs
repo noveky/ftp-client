@@ -24,6 +24,7 @@ namespace FtpClient
 			InitializeComponent();
 
 			service.GotResponse += LogResponse;
+			service.LogStatus += LogStatus;
 			service.UpdatedTransferTasks += RefreshTransferList;
 		}
 
@@ -89,41 +90,6 @@ namespace FtpClient
 			}
 		}
 
-		string GetSizeStr(long size)
-		{
-			if (size < 1024)
-			{
-				return $"{size} B";
-			}
-			else if(size < 1048576)
-			{
-				return $"{(long)Math.Round((double)size / 1024)} KB";
-			}
-			else if (size < 1073741824)
-			{
-				return $"{(long)Math.Round((double)size / 1048576)} MB";
-			}
-			else
-			{
-				return $"{(long)Math.Round((double)size / 1073741824)} GB";
-			}
-		}
-
-		// 为确保新文件名不会重复，若原文件名已存在，则在后面加一个(1)，如果仍然存在则括号内数字递增到不存在为止
-		string GetUniqueNameLocalFile(string localFile)
-		{
-			string fileName = Path.GetFileNameWithoutExtension(localFile);
-			string extension = Path.GetExtension(localFile);
-			string newLocalFile = localFile;
-			int count = 1;
-			while (File.Exists(newLocalFile))
-			{
-				newLocalFile = Path.Combine(Path.GetDirectoryName(localFile) ?? "", $"{fileName} ({count}){extension}");
-				++count;
-			}
-			return newLocalFile;
-		}
-
 		// 获取并显示文件列表
 		void DisplayDirList(bool throwException = false)
 		{
@@ -161,7 +127,7 @@ namespace FtpClient
 					else
 					{
 						item.SubItems.Add(info.LastModified.ToString());
-						item.SubItems.Add(GetSizeStr(info.Size));
+						item.SubItems.Add(FileSystem.GetSizeStr(info.Size));
 					}
 
 					// 向列表视图中添加该项
@@ -571,7 +537,7 @@ namespace FtpClient
 					string targetLocalFile = Path.Combine(txtLocalPath.Text, fileName);
 					if (File.Exists(targetLocalFile))
 					{
-						string newLocalFile = GetUniqueNameLocalFile(targetLocalFile);
+						string newLocalFile = FileSystem.GetUniqueNameLocalFile(targetLocalFile);
 
 						LogStatus($"\"{targetLocalFile}\" 已存在，下载到新文件名 {Path.GetFileName(newLocalFile)}");
 
@@ -675,8 +641,10 @@ namespace FtpClient
 
 		private void tmrRefreshTransfer_Tick(object sender, EventArgs e)
 		{
-			if (service.transferTasks.Any(t => t.Task?.IsCompleted ?? false))
-			RefreshTransferList();
+			if (service.transferTasks.Any(t => t.IsRunning))
+			{
+				RefreshTransferList();
+			}
 		}
 	}
 }

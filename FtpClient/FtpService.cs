@@ -9,6 +9,7 @@ using System.Security.Cryptography;
 using Microsoft.VisualBasic.Logging;
 using System.Xml.Linq;
 using System.Runtime.CompilerServices;
+using FtpClient;
 
 namespace MyFtp3
 {
@@ -58,11 +59,13 @@ namespace MyFtp3
 
 		// 用事件的方式向用户界面输出应答、通知更新传输列表
 		public event Action<string?> GotResponse;
+		public event Action<string?> LogStatus;
 		public event Action UpdatedTransferTasks;
 
 		public FtpService()
 		{
 			GotResponse += _ => { };
+			LogStatus += _ => { };
 			UpdatedTransferTasks += () => { };
 		}
 
@@ -120,15 +123,23 @@ namespace MyFtp3
 				DateTime lastModified = DateTime.MinValue;
 				long size = 0;
 
-				// 获取修改日期和文件大小，如果抛出异常说明不是文件而是目录
+				string path = $"{dir}{list[i]}";
+
+				// 获取修改日期和文件大小，并确定是否为目录
 				try
 				{
-					lastModified = GetFileLastModified($"{dir}{list[i]}");
-					size = GetFileSize($"{dir}{list[i]}");
+					lastModified = GetFileLastModified(path);
+					size = GetFileSize(path);
 				}
 				catch (Exception)
 				{
-					isDirectory = true;
+					try
+					{
+						ListDir($"{path}/");
+
+						isDirectory = true;
+					}
+					catch { }
 				}
 
 				infos[i] = new()
@@ -219,21 +230,23 @@ namespace MyFtp3
 			// 用文件流将本地文件上传到服务器
 			using (FileStream fileStream = File.Open(localFile, FileMode.Open, FileAccess.Read))
 			{
-				long serverFileSize = GetFileSize(remoteFile);
+				long fileSize = fileStream.Length;
+				long serverFileSize = FileExists(remoteFile) ? GetFileSize(remoteFile) : 0;
 				if (serverFileSize > 0)
 				{
 					// 断点续传
 					request.ContentOffset = serverFileSize;
 					fileStream.Seek(serverFileSize, SeekOrigin.Begin);
 					request.ContentLength = fileStream.Length - serverFileSize;
+
+					LogStatus($"{Path.GetFileName(remoteFile)} 断点续传 {FileSystem.GetSizeStr(serverFileSize)} / {FileSystem.GetSizeStr(fileSize)}");
 				}
 
 				using Stream requestStream = request.GetRequestStream();
 				//await fileStream.CopyToAsync(requestStream);
 
-				long fileSize = fileStream.Length;
 				byte[] buffer = new byte[bufferSize];
-				long bytesSent = 0;
+				long bytesSent = serverFileSize; // 断点续传按断点之前都已传输完成算
 				int bytesToSend = await fileStream.ReadAsync(buffer, 0, bufferSize);
 				while (bytesToSend != 0)
 				{
