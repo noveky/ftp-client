@@ -82,7 +82,6 @@ namespace FtpClient
 			if (!CanBeCanceled) return;
 
 			canceled = true;
-
 			Task = null;
 		}
 	}
