@@ -73,9 +73,6 @@
 			this.tsiTransferList_Unpause = new System.Windows.Forms.ToolStripMenuItem();
 			this.tsiTransferList_Retry = new System.Windows.Forms.ToolStripMenuItem();
 			this.tsiTransferList_Cancel = new System.Windows.Forms.ToolStripMenuItem();
-			this.tsiTransferList_PauseAll = new System.Windows.Forms.ToolStripMenuItem();
-			this.tsiTransferList_UnpauseAll = new System.Windows.Forms.ToolStripMenuItem();
-			this.tsiTransferList_CancelAll = new System.Windows.Forms.ToolStripMenuItem();
 			this.tsiTransferList_RemoveInactive = new System.Windows.Forms.ToolStripMenuItem();
 			this.cmsDirList = new System.Windows.Forms.ContextMenuStrip(this.components);
 			this.tsiDirList_Download = new System.Windows.Forms.ToolStripMenuItem();
@@ -553,12 +550,9 @@
             this.tsiTransferList_Unpause,
             this.tsiTransferList_Retry,
             this.tsiTransferList_Cancel,
-            this.tsiTransferList_PauseAll,
-            this.tsiTransferList_UnpauseAll,
-            this.tsiTransferList_CancelAll,
             this.tsiTransferList_RemoveInactive});
 			this.cmsTransferList.Name = "cmsTransferList";
-			this.cmsTransferList.Size = new System.Drawing.Size(181, 202);
+			this.cmsTransferList.Size = new System.Drawing.Size(181, 136);
 			// 
 			// tsiTransferList_Pause
 			// 
@@ -588,29 +582,12 @@
 			this.tsiTransferList_Cancel.Text = "取消";
 			this.tsiTransferList_Cancel.Click += new System.EventHandler(this.tsiTransferList_Cancel_Click);
 			// 
-			// tsiTransferList_PauseAll
-			// 
-			this.tsiTransferList_PauseAll.Name = "tsiTransferList_PauseAll";
-			this.tsiTransferList_PauseAll.Size = new System.Drawing.Size(180, 22);
-			this.tsiTransferList_PauseAll.Text = "全部暂停";
-			// 
-			// tsiTransferList_UnpauseAll
-			// 
-			this.tsiTransferList_UnpauseAll.Name = "tsiTransferList_UnpauseAll";
-			this.tsiTransferList_UnpauseAll.Size = new System.Drawing.Size(180, 22);
-			this.tsiTransferList_UnpauseAll.Text = "全部继续";
-			// 
-			// tsiTransferList_CancelAll
-			// 
-			this.tsiTransferList_CancelAll.Name = "tsiTransferList_CancelAll";
-			this.tsiTransferList_CancelAll.Size = new System.Drawing.Size(180, 22);
-			this.tsiTransferList_CancelAll.Text = "全部取消";
-			// 
 			// tsiTransferList_RemoveInactive
 			// 
 			this.tsiTransferList_RemoveInactive.Name = "tsiTransferList_RemoveInactive";
 			this.tsiTransferList_RemoveInactive.Size = new System.Drawing.Size(180, 22);
 			this.tsiTransferList_RemoveInactive.Text = "清除非活跃任务";
+			this.tsiTransferList_RemoveInactive.Click += new System.EventHandler(this.tsiTransferList_RemoveInactive_Click);
 			// 
 			// cmsDirList
 			// 
@@ -731,11 +708,8 @@
 		private System.Windows.Forms.Timer tmrRefreshTransfer;
 		private ToolStripMenuItem tsiTransferList_Pause;
 		private ToolStripMenuItem tsiTransferList_Unpause;
-		private ToolStripMenuItem tsiTransferList_PauseAll;
-		private ToolStripMenuItem tsiTransferList_UnpauseAll;
 		private ToolStripMenuItem tsiTransferList_Retry;
 		private ToolStripMenuItem tsiTransferList_Cancel;
-		private ToolStripMenuItem tsiTransferList_CancelAll;
 		private Button btnOpenLocalPath;
 	}
 }

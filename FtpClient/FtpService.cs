@@ -40,6 +40,7 @@ namespace MyFtp3
 		private bool canceled = false;
 
 		// 方便使用的get属性
+		public string OperationName => IsUpload ? "上传" : "下载";
 		public bool IsRunning => !Task?.IsCompleted ?? false;
 		public bool IsPaused => !canceled && paused;
 		public bool IsCanceled => canceled;
@@ -48,7 +49,7 @@ namespace MyFtp3
 		public bool CanBePaused => IsRunning;
 		public bool CanBeUnpaused => IsPaused;
 		public bool CanBeRetried => IsFaulted;
-		public bool CanBeCanceled => !IsSucceeded;
+		public bool CanBeCanceled => !IsSucceeded && !IsCanceled;
 
 		public TransferTask()
 		{
@@ -294,7 +295,7 @@ namespace MyFtp3
 						request.ContentOffset = startPosition;
 						fileStream.Seek(startPosition, SeekOrigin.Begin);
 
-						LogInfo($"{Path.GetFileName(remoteFile)} 断点续传 {FileSystem.GetSizeStr(startPosition)} / {FileSystem.GetSizeStr(fileSize)}");
+						LogInfo($"{Path.GetFileName(remoteFile)} 开始断点续传 {FileSystem.GetSizeStr(startPosition)} / {FileSystem.GetSizeStr(fileSize)}");
 					}
 				}
 
@@ -314,6 +315,7 @@ namespace MyFtp3
 					if (transferTask.IsPaused || transferTask.IsCanceled)
 					{
 						request.Abort();
+
 						return;
 					}
 
@@ -349,7 +351,7 @@ namespace MyFtp3
 					request.ContentOffset = startPosition;
 					fileStream.Seek(startPosition, SeekOrigin.Begin);
 
-					LogInfo($"{Path.GetFileName(remoteFile)} 断点续传 {FileSystem.GetSizeStr(startPosition)} / {FileSystem.GetSizeStr(fileSize)}");
+					LogInfo($"{Path.GetFileName(remoteFile)} 开始断点续传 {FileSystem.GetSizeStr(startPosition)} / {FileSystem.GetSizeStr(fileSize)}");
 				}
 			}
 
@@ -370,6 +372,7 @@ namespace MyFtp3
 				if (transferTask.IsPaused || transferTask.IsCanceled)
 				{
 					request.Abort();
+
 					return;
 				}
 

@@ -226,18 +226,18 @@ namespace FtpClient
 					};
 
 					// 添加状态信息
-					string operationStr = transferTask.IsUpload ? "上传" : "下载";
+					string opName = transferTask.OperationName;
 					item.SubItems.Add(
 						transferTask.IsSucceeded
-						? $"{operationStr}完成"
+						? $"{opName}完成"
 						: transferTask.IsFaulted
-						? $"{operationStr}失败"
+						? $"{opName}失败"
 						: transferTask.IsRunning
-						? $"{operationStr}中 {transferTask.Progress:0.00%}"
+						? $"{opName}中 {transferTask.Progress:0.00%}"
 						: transferTask.IsPaused
-						? $"暂停{operationStr}"
+						? $"暂停{opName}"
 						: transferTask.IsCanceled
-						? $"取消{operationStr}"
+						? $"取消{opName}"
 						: ""
 					);
 
@@ -328,7 +328,10 @@ namespace FtpClient
 			{
 				await task;
 
-				LogStatus($"{fileName} 上传完成");
+				if (transferTask.IsSucceeded)
+				{
+					LogStatus($"{fileName} 上传完成");
+				}
 
 				RefreshDirList();
 			}
@@ -370,9 +373,10 @@ namespace FtpClient
 			{
 				await task;
 
-				LogStatus($"{fileName} 下载完成");
-
-				RefreshDirList();
+				if (transferTask.IsSucceeded)
+				{
+					LogStatus($"{fileName} 下载完成");
+				}
 			}
 			catch (Exception ex)
 			{
@@ -686,19 +690,21 @@ namespace FtpClient
 		{
 			if (e.Button == MouseButtons.Right)
 			{
-				bool canPause, canUnpause, canRetry;
-				canPause = canUnpause = canRetry = SelectedTransferTasks.Count != 0;
+				bool canPause, canUnpause, canRetry, canCancel;
+				canPause = canUnpause = canRetry = canCancel = SelectedTransferTasks.Count != 0;
 
 				foreach (var tTask in SelectedTransferTasks)
 				{
 					canPause &= tTask.CanBePaused;
 					canUnpause &= tTask.CanBeUnpaused;
 					canRetry &= tTask.CanBeRetried;
+					canCancel &= tTask.CanBeCanceled;
 				}
 
 				tsiTransferList_Pause.Visible = canPause;
 				tsiTransferList_Unpause.Visible = canUnpause;
 				tsiTransferList_Retry.Visible = canRetry;
+				tsiTransferList_Cancel.Visible = canCancel;
 
 				// 弹出右键菜单
 				cmsTransferList.Show(lstTransfer.PointToScreen(e.Location));
@@ -780,7 +786,49 @@ namespace FtpClient
 
 		private void tsiTransferList_Cancel_Click(object sender, EventArgs e)
 		{
-			SelectedTransferTasks.ForEach(tTask => tTask.Cancel());
+			SelectedTransferTasks.ForEach(tTask =>
+			{
+				tTask.Cancel();
+
+				try
+				{
+					if (tTask.IsUpload)
+					{
+						FtpService.DeleteFile(tTask.RemoteFile);
+					}
+					else
+					{
+						File.Delete(tTask.LocalFile);
+					}
+				}
+				catch (Exception ex)
+				{
+					LogError(ex.Message);
+				}
+
+				LogStatus($"取消{tTask.OperationName} {tTask.FileName}");
+
+				if (tTask.IsUpload)
+				{
+					RefreshDirList();
+				}
+				RefreshTransferList();
+			});
+		}
+
+		private void tsiTransferList_RemoveInactive_Click(object sender, EventArgs e)
+		{
+			List<TransferTask> tTasksToRemove = new();
+			FtpService.transferTasks.ForEach(tTask =>
+			{
+				if (tTask.IsSucceeded || tTask.IsCanceled)
+				{
+					tTasksToRemove.Add(tTask);
+				}
+			});
+			tTasksToRemove.ForEach(tTask => FtpService.transferTasks.Remove(tTask));
+
+			RefreshTransferList();
 		}
 	}
 }
