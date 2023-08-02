@@ -486,7 +486,7 @@
 			this.txtLocalPath.AcceptsReturn = true;
 			this.txtLocalPath.Location = new System.Drawing.Point(0, 60);
 			this.txtLocalPath.Name = "txtLocalPath";
-			this.txtLocalPath.PlaceholderText = "未设置";
+			this.txtLocalPath.PlaceholderText = "双击或键入来设置";
 			this.txtLocalPath.Size = new System.Drawing.Size(231, 23);
 			this.txtLocalPath.TabIndex = 2;
 			this.txtLocalPath.Text = "D:\\ftp-test\\client\\";

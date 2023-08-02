@@ -569,6 +569,12 @@ namespace FtpClient
 
 		void DownloadDirItem(ListViewItem item)
 		{
+			if (string.IsNullOrEmpty(LocalPath))
+			{
+				MessageBox.Show("未设置本地路径！", "下载时发生错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				return;
+			}
+
 			string fileName = item.Text;
 			string targetLocalFile = Path.Combine(LocalPath, fileName);
 			Invoke(async () => await DownloadFile($"{FtpService.WorkDir}{fileName}", targetLocalFile));
