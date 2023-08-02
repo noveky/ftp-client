@@ -65,7 +65,7 @@
 			this.txtLocalPath = new System.Windows.Forms.TextBox();
 			this.label2 = new System.Windows.Forms.Label();
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
-			this.txtStatus = new System.Windows.Forms.RichTextBox();
+			this.txtLog = new System.Windows.Forms.RichTextBox();
 			this.cmsStatus = new System.Windows.Forms.ContextMenuStrip(this.components);
 			this.tsiStatus_Clear = new System.Windows.Forms.ToolStripMenuItem();
 			this.cmsTransferList = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -505,7 +505,7 @@
 			// 
 			// groupBox1
 			// 
-			this.groupBox1.Controls.Add(this.txtStatus);
+			this.groupBox1.Controls.Add(this.txtLog);
 			this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.groupBox1.Location = new System.Drawing.Point(9, 350);
 			this.groupBox1.Margin = new System.Windows.Forms.Padding(9, 0, 9, 9);
@@ -513,20 +513,20 @@
 			this.groupBox1.Size = new System.Drawing.Size(697, 141);
 			this.groupBox1.TabIndex = 2;
 			this.groupBox1.TabStop = false;
-			this.groupBox1.Text = "输出";
+			this.groupBox1.Text = "日志";
 			// 
-			// txtStatus
+			// txtLog
 			// 
-			this.txtStatus.BorderStyle = System.Windows.Forms.BorderStyle.None;
-			this.txtStatus.ContextMenuStrip = this.cmsStatus;
-			this.txtStatus.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.txtStatus.Location = new System.Drawing.Point(3, 19);
-			this.txtStatus.Name = "txtStatus";
-			this.txtStatus.ReadOnly = true;
-			this.txtStatus.Size = new System.Drawing.Size(691, 119);
-			this.txtStatus.TabIndex = 1;
-			this.txtStatus.TabStop = false;
-			this.txtStatus.Text = "";
+			this.txtLog.BorderStyle = System.Windows.Forms.BorderStyle.None;
+			this.txtLog.ContextMenuStrip = this.cmsStatus;
+			this.txtLog.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.txtLog.Location = new System.Drawing.Point(3, 19);
+			this.txtLog.Name = "txtLog";
+			this.txtLog.ReadOnly = true;
+			this.txtLog.Size = new System.Drawing.Size(691, 119);
+			this.txtLog.TabIndex = 1;
+			this.txtLog.TabStop = false;
+			this.txtLog.Text = "";
 			// 
 			// cmsStatus
 			// 
@@ -701,7 +701,7 @@
 		private ContextMenuStrip cmsStatus;
 		private ToolStripMenuItem tsiStatus_Clear;
 		private GroupBox groupBox1;
-		private RichTextBox txtStatus;
+		private RichTextBox txtLog;
 		private ColumnHeader columnHeader4;
 		private ColumnHeader columnHeader5;
 		private ContextMenuStrip cmsTransferList;

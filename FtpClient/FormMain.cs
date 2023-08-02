@@ -65,14 +65,14 @@ namespace FtpClient
 
 		void Log(string message)
 		{
-			if (txtStatus.Text.Length != 0)
+			if (txtLog.Text.Length != 0)
 			{
-				txtStatus.AppendText("\n");
+				txtLog.AppendText("\n");
 			}
-			txtStatus.AppendText($"[{DateTime.Now:HH:mm:ss}] {message.Trim()}");
-			txtStatus.SelectionStart = txtStatus.Text.Length - 1;
-			txtStatus.SelectionLength = 0;
-			txtStatus.ScrollToCaret();
+			txtLog.AppendText($"[{DateTime.Now:HH:mm:ss}] {message.Trim()}");
+			txtLog.SelectionStart = txtLog.Text.Length - 1;
+			txtLog.SelectionLength = 0;
+			txtLog.ScrollToCaret();
 		}
 
 		void LogResponse(string? statMsg)
@@ -670,7 +670,7 @@ namespace FtpClient
 
 		private void tsiStatus_Clear_Click(object sender, EventArgs e)
 		{
-			txtStatus.Clear();
+			txtLog.Clear();
 		}
 
 		private void btnMkDir_Click(object sender, EventArgs e)
