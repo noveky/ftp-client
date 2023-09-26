@@ -1,15 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Net.Sockets;
-using System.IO;
-using System.Net;
-using System.Security.Cryptography;
-using Microsoft.VisualBasic.Logging;
-using System.Xml.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+﻿using System.Net;
+using System;
 
 namespace FtpClient
 {
@@ -33,6 +23,7 @@ namespace FtpClient
 		public string LocalFile = string.Empty;
 		public string RemoteFile = string.Empty;
 		public bool IsUpload = true; // true：上传，false：下载
+		public long BytesTransferred = 0;
 		public double Progress = 0;
 
 		private bool paused = false;
@@ -122,13 +113,13 @@ namespace FtpClient
 			WorkDir = "/";
 		}
 
-		// 列出工作路径中所有项的详细信息
+		// 列出工作目录中所有项的详细信息
 		public static DirItemInfo[] ListWorkDir()
 		{
 			return ListDir(WorkDir);
 		}
 
-		// 列出指定路径中所有项的详细信息
+		// 列出指定目录中所有项的详细信息
 		public static DirItemInfo[] ListDir(string dir)
 		{
 			FtpWebRequest request = (FtpWebRequest)WebRequest.Create($"ftp://{Host}{dir}");
@@ -287,7 +278,8 @@ namespace FtpClient
 				long startPosition = 0;
 				if (allowBreakpointResume)
 				{
-					startPosition = FileExists(remoteFile) ? GetFileSize(remoteFile) : 0;
+					//startPosition = FileExists(remoteFile) ? GetFileSize(remoteFile) : 0;
+					startPosition = transferTask.BytesTransferred;
 					if (startPosition > 0)
 					{
 						// 断点续传
@@ -304,12 +296,13 @@ namespace FtpClient
 				// 分块上传
 				byte[] buffer = new byte[bufferSize];
 				long bytesSent = startPosition; // 断点续传按断点之前都已传输完成算
-				int bytesToSend = await fileStream.ReadAsync(buffer, 0, bufferSize);
+				int bytesToSend = await fileStream.ReadAsync(buffer.AsMemory(0, bufferSize));
 				while (bytesToSend != 0)
 				{
 					await requestStream.WriteAsync(buffer.AsMemory(0, bytesToSend));
 
 					bytesSent += bytesToSend;
+					transferTask.BytesTransferred = bytesSent;
 					transferTask.Progress = (double)bytesSent / fileSize;
 					if (transferTask.IsPaused || transferTask.IsCanceled)
 					{
@@ -324,7 +317,7 @@ namespace FtpClient
 						return;
 					}
 
-					bytesToSend = await fileStream.ReadAsync(buffer, 0, bufferSize);
+					bytesToSend = await fileStream.ReadAsync(buffer.AsMemory(0, bufferSize));
 				}
 			}
 
@@ -349,7 +342,8 @@ namespace FtpClient
 			long startPosition = 0;
 			if (allowBreakpointResume)
 			{
-				startPosition = File.Exists(localFile) ? new FileInfo(localFile).Length : 0;
+				//startPosition = File.Exists(localFile) ? new FileInfo(localFile).Length : 0;
+				startPosition = transferTask.BytesTransferred;
 				if (startPosition > 0)
 				{
 					// 断点续传
@@ -367,12 +361,13 @@ namespace FtpClient
 			// 分块下载
 			byte[] buffer = new byte[bufferSize];
 			long bytesRead = startPosition; // 断点续传按断点之前都已传输完成算
-			int bytesToRead = await responseStream.ReadAsync(buffer, 0, bufferSize);
+			int bytesToRead = await responseStream.ReadAsync(buffer.AsMemory(0, bufferSize));
 			while (bytesToRead != 0)
 			{
 				await fileStream.WriteAsync(buffer.AsMemory(0, bytesToRead));
 
 				bytesRead += bytesToRead;
+				transferTask.BytesTransferred = bytesRead;
 				transferTask.Progress = (double)bytesRead / fileSize;
 				if (transferTask.IsPaused || transferTask.IsCanceled)
 				{
@@ -386,7 +381,7 @@ namespace FtpClient
 					return;
 				}
 
-				bytesToRead = await responseStream.ReadAsync(buffer, 0, bufferSize);
+				bytesToRead = await responseStream.ReadAsync(buffer.AsMemory(0, bufferSize));
 			}
 
 			// 下载完成

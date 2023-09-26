@@ -1,19 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.ServiceProcess;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Tab;
+﻿using System.Data;
 using System.Diagnostics;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
-using System.Collections;
 
 namespace FtpClient
 {
@@ -65,12 +51,12 @@ namespace FtpClient
 
 		void Log(string text)
 		{
-			if (txtLog.Text.Length != 0)
+			if (txtLog.TextLength != 0)
 			{
 				txtLog.AppendText("\n");
 			}
 			txtLog.AppendText($"[{DateTime.Now:HH:mm:ss}] {text.Trim()}");
-			txtLog.SelectionStart = txtLog.Text.Length - 1;
+			txtLog.SelectionStart = txtLog.TextLength;
 			txtLog.SelectionLength = 0;
 			txtLog.ScrollToCaret();
 		}
@@ -161,8 +147,8 @@ namespace FtpClient
 					// 添加修改日期和大小信息
 					if (info.IsDirectory)
 					{
-						item.SubItems.Add("<目录>");
-						item.SubItems.Add("<目录>");
+						item.SubItems.Add("＜目录＞");
+						item.SubItems.Add("＜目录＞");
 					}
 					else
 					{
