@@ -8,7 +8,7 @@ namespace FtpClient
 {
 	public static class FileUtility
 	{
-		public static string GetSizeStr(long size)
+		public static string FormatFileSize(long size)
 		{
 			string[] units = { "B", "KB", "MB", "GB", "TB" };
 			int unitIndex = 0;
@@ -32,18 +32,18 @@ namespace FtpClient
 		}
 
 		// 为确保新文件名不会重复，若原文件名已存在，则在后面加一个(1)，如果仍然存在则括号内数字递增到不存在为止
-		public static string GetUniqueNameLocalFile(string localFile)
+		public static string GenerateUniqueNamedFile(string file)
 		{
-			string fileName = Path.GetFileNameWithoutExtension(localFile);
-			string extension = Path.GetExtension(localFile);
-			string newLocalFile = localFile;
+			string fileName = Path.GetFileNameWithoutExtension(file);
+			string extension = Path.GetExtension(file);
+			string newFile = file;
 			int count = 1;
-			while (File.Exists(newLocalFile))
+			while (File.Exists(newFile))
 			{
-				newLocalFile = Path.Combine(Path.GetDirectoryName(localFile) ?? "", $"{fileName} ({count}){extension}");
+				newFile = Path.Combine(Path.GetDirectoryName(file) ?? "", $"{fileName} ({count}){extension}");
 				++count;
 			}
-			return newLocalFile;
+			return newFile;
 		}
 	}
 }

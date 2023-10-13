@@ -153,7 +153,7 @@ namespace FtpClient
 					else
 					{
 						item.SubItems.Add(info.LastModified.ToString());
-						item.SubItems.Add(FileUtility.GetSizeStr(info.Size));
+						item.SubItems.Add(FileUtility.FormatFileSize(info.Size));
 					}
 
 					// 向列表视图中添加该项
@@ -343,7 +343,7 @@ namespace FtpClient
 				// 重命名同名文件
 				if (File.Exists(localFile))
 				{
-					string newLocalFile = FileUtility.GetUniqueNameLocalFile(localFile);
+					string newLocalFile = FileUtility.GenerateUniqueNamedFile(localFile);
 
 					LogStatus($"\"{localFile}\" 已存在，下载到新文件名 {Path.GetFileName(newLocalFile)}");
 
