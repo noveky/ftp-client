@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FtpClient
 {
-	public static class FileSystem
+	public static class FileUtility
 	{
 		public static string GetSizeStr(long size)
 		{

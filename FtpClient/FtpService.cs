@@ -286,7 +286,7 @@ namespace FtpClient
 						request.ContentOffset = startPosition;
 						fileStream.Seek(startPosition, SeekOrigin.Begin);
 
-						LogMessage?.Invoke($"{Path.GetFileName(remoteFile)} 开始断点续传 {FileSystem.GetSizeStr(startPosition)} / {FileSystem.GetSizeStr(fileSize)}");
+						LogMessage?.Invoke($"{Path.GetFileName(remoteFile)} 开始断点续传 {FileUtility.GetSizeStr(startPosition)} / {FileUtility.GetSizeStr(fileSize)}");
 					}
 				}
 
@@ -350,7 +350,7 @@ namespace FtpClient
 					request.ContentOffset = startPosition;
 					fileStream.Seek(startPosition, SeekOrigin.Begin);
 
-					LogMessage?.Invoke($"{Path.GetFileName(remoteFile)} 开始断点续传 {FileSystem.GetSizeStr(startPosition)} / {FileSystem.GetSizeStr(fileSize)}");
+					LogMessage?.Invoke($"{Path.GetFileName(remoteFile)} 开始断点续传 {FileUtility.GetSizeStr(startPosition)} / {FileUtility.GetSizeStr(fileSize)}");
 				}
 			}
 
