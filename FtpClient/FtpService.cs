@@ -417,5 +417,37 @@ namespace FtpClient
 
 			LogResponse?.Invoke(response.StatusDescription);
 		}
+
+		// 递归删除目录及所有子项
+		public static void DeleteDirectoryWithAll(string dir)
+		{
+			string? name = Path.GetFileName(dir);
+			if (name == "." || name == "..") return;
+
+			// 遍历当前目录的一级子项
+			DirItemInfo[] infos = ListDir(dir);
+			foreach (var info in infos)
+			{
+				string path = $"{dir}{info.Name}";
+				if (info.IsDirectory)
+				{
+					// 为目录，递归删除
+					path += "/";
+					DeleteDirectoryWithAll(path);
+				}
+				else
+				{
+					// 为文件，直接删除
+					DeleteFile(path);
+
+					LogMessage?.Invoke($"删除文件 \"{path}\"");
+				}
+			}
+
+			// 移除空目录
+			RemoveDirectory(dir);
+
+			LogMessage?.Invoke($"移除空目录 \"{dir}\"");
+		}
 	}
 }
