@@ -141,7 +141,7 @@ namespace FtpClient
 					ListViewItem item = new()
 					{
 						Text = info.Name,
-						Name = info.IsDirectory ? "dir" : "file", // 用Name区分文件和目录
+						Tag = info.IsDirectory ? "dir" : "file",
 					};
 
 					// 添加修改日期和大小信息
@@ -213,7 +213,7 @@ namespace FtpClient
 					ListViewItem item = new()
 					{
 						Text = transferTask.FileName,
-						Name = transferTask.Id,
+						Tag = transferTask.Id,
 					};
 
 					// 添加状态信息
@@ -430,7 +430,7 @@ namespace FtpClient
 				if (item != null)
 				{
 					// 若该项是目录，则转到该目录下；若该项是文件，则下载该文件
-					if (item.Name == "dir")
+					if ((string)item.Tag == "dir")
 					{
 						ChangeDir(FtpService.WorkDir.TrimEnd('/') + "/" + item.Text + "/");
 					}
@@ -471,7 +471,7 @@ namespace FtpClient
 					foreach (ListViewItem item in lstWorkDir.SelectedItems)
 					{
 						// 判断是文件还是目录
-						if (item.Name == "dir")
+						if ((string)item.Tag == "dir")
 						{
 							selDir |= true;
 						}
@@ -592,7 +592,7 @@ namespace FtpClient
 				int selFileCnt = 0; // 选择的项目中包含文件的个数
 				foreach (ListViewItem item in lstWorkDir.SelectedItems)
 				{
-					if (item.Name == "dir")
+					if ((string)item.Tag == "dir")
 					{
 						++selDirCnt;
 					}
@@ -621,7 +621,7 @@ namespace FtpClient
 						string name = item.Text;
 						string path = $"{FtpService.WorkDir}{name}";
 						// 根据项目是文件还是目录，使用不同的删除方式
-						if (item.Name == "dir")
+						if ((string)item.Tag == "dir")
 						{
 							path += "/";
 
@@ -681,7 +681,7 @@ namespace FtpClient
 				{
 					foreach (var tTask in FtpService.transferTasks)
 					{
-						if (tTask.Id == item.Name)
+						if (tTask.Id == (string)item.Tag)
 						{
 							sel.Add(tTask);
 							break;
