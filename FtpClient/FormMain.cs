@@ -464,6 +464,7 @@ namespace FtpClient
 			// 按下回车时，将控件焦点去掉，触发Leave事件
 			if (e.KeyCode == Keys.Return)
 			{
+				e.Handled = true;
 				ActiveControl = null;
 			}
 		}
